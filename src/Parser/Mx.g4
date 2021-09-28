@@ -5,6 +5,15 @@ package MxCompiler.Parser;
 }
 program:STRING_CONSTANT*;
 
+
+
+
+//symbols
+DOT: '.';
+
+
+
+
 // reserved words
 INT: 'int';
 BOOL: 'bool';
