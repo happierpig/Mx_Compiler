@@ -44,26 +44,27 @@ statement
 block: '{' statement* '}';
 
 expression
-    :   IDENTIFIER                                                      #identifier
-    |   constantValue                                                   #constant
-    |   expression DOT IDENTIFIER                                       #objPortion
-    |   NEW allocFormat                                                 #allocExp
-    |   expression '(' parameterListForCall? ')'                        #functionCall
-    |   '(' expression ')'                                              #compoundExp
-    |   array=expression '[' index=expression ']'                       #arrayAccess
-    |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression         #monocularOp
-    |   operand1=expression op=('*'|'/'|'%') operand2=expression        #mdmOp
-    |   operand1=expression op=('+'|'-') operand2=expression            #pmOp
-    |   operand1=expression op=('>>'|'<<') operand2=expression          #shiftOp
-    |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression  #compareOp
-    |   operand1=expression op=('=='|'!=') operand2=expression          #compareOp
-    |   operand1=expression op='&' operand2=expression                  #bitwiseOp
-    |   operand1=expression op='^' operand2=expression                  #bitwiseOp
-    |   operand1=expression op='|' operand2=expression                  #bitwiseOp
-    |   operand1=expression op='&&' operand2=expression                 #logicOp
-    |   operand1=expression op='||' operand2=expression                 #logicOp
-    |   <assoc=right> operand1=expression op='=' operand2=expression    #assignOp
-    |   THIS                                                            #objectPointer
+    :   IDENTIFIER                                                                  #identifier
+    |   constantValue                                                               #constant
+    |   expression DOT IDENTIFIER                                                   #objPortion
+    |   NEW allocFormat                                                             #allocExp
+    |   expression '(' parameterListForCall? ')'                                    #functionCall
+    |   '(' expression ')'                                                          #compoundExp
+    |   array=expression '[' index=expression ']'                                   #arrayAccess
+    |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression                     #monocularOp
+    |   operand1=expression op=('*'|'/'|'%') operand2=expression                    #mdmOp
+    |   operand1=expression op=('+'|'-') operand2=expression                        #pmOp
+    |   operand1=expression op=('>>'|'<<') operand2=expression                      #shiftOp
+    |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression              #compareOp
+    |   operand1=expression op=('=='|'!=') operand2=expression                      #compareOp
+    |   operand1=expression op='&' operand2=expression                              #bitwiseOp
+    |   operand1=expression op='^' operand2=expression                              #bitwiseOp
+    |   operand1=expression op='|' operand2=expression                              #bitwiseOp
+    |   operand1=expression op='&&' operand2=expression                             #logicOp
+    |   operand1=expression op='||' operand2=expression                             #logicOp
+    |   <assoc=right> operand1=expression op='=' operand2=expression                #assignOp
+    |   THIS                                                                        #objectPointer
+    |   LAMBDAS1 lambdaParameterList? LAMBDAS2 block '(' parameterListForCall? ')'  #lambdaExp
     ;
 
 allocFormat
@@ -93,16 +94,16 @@ functionDecl: functionType? IDENTIFIER '(' parameterList? ')' block;
 
 parameterList: variableType IDENTIFIER (',' variableType IDENTIFIER)*;
 
+lambdaParameterList: '(' parameterList? ')';
+
 parameterListForCall: expression (',' expression)*;
 
 classDecl: CLASS classID=IDENTIFIER '{' (variableDecl|functionDecl)* '}' ';';
 
-
-
-
 //symbols
 DOT: '.';
-
+LAMBDAS1: '[&]';
+LAMBDAS2: '->';
 
 // reserved words
 INT: 'int';
