@@ -4,12 +4,12 @@ grammar Mx;
 package MxCompiler.Parser;
 }
 
-program: execCode*;
+program: subProgram*;
 
 subProgram
-    :   functionDecl
-    |   classDecl
-    |   variableDecl
+    :   functionDecl    #functionDeclaration
+    |   classDecl       #classDeclaration
+    |   variableDecl    #variableDeclaration
     ;
 
 // fundamental type parser
@@ -24,7 +24,7 @@ baseType
 
 variableType
     :   baseType            #baseVariableType
-    |   variableType '[]'   #array_Type
+    |   variableType '[' ']'  #array_Type
     ;
 
 functionType
@@ -34,24 +34,21 @@ functionType
 
 // statement definition
 statement
-    :   (ifStmt | loopStmt | jumpStmt)      #unitStat
+    :   block                               #codeBlock
+    |   (ifStmt | loopStmt | jumpStmt)      #unitStat
     |   expression ';'                      #exprStat
     |   variableDecl                        #variableDeclStat
     |   ';'                                 #blankStmt
     ;
 
-block: '{' execCode* '}';
-
-execCode
-    :   statement   #singleStatement
-    |   block       #codeBlock
-    ;
+block: '{' statement* '}';
 
 expression
-    :   IDENTIFIER                                                      #idnetifier
+    :   IDENTIFIER                                                      #identifier
     |   constantValue                                                   #constant
-    |   IDENTIFIER DOT IDENTIFIER                                       #objPortion
+    |   expression DOT IDENTIFIER                                       #objPortion
     |   NEW allocFormat                                                 #allocExp
+    |   expression '(' parameterListForCall? ')'                        #functionCall
     |   '(' expression ')'                                              #compoundExp
     |   array=expression '[' index=expression ']'                       #arrayAccess
     |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression         #monocularOp
@@ -66,18 +63,19 @@ expression
     |   operand1=expression op='&&' operand2=expression                 #logicOp
     |   operand1=expression op='||' operand2=expression                 #logicOp
     |   <assoc=right> operand1=expression op='=' operand2=expression    #assignOp
+    |   THIS                                                            #objectPointer
     ;
 
 allocFormat
-    :   baseType ('[' arraySize=expression ']')+ ('[]')*    #allocArrayType
-    |   baseType '()'?                                      #allocBaseType
+    :   baseType ('[' arraySize=expression ']')+ ('[' ']')*    #allocArrayType
+    |   baseType ('(' ')')?                                      #allocBaseType
     ;
 
-ifStmt: IF '(' condition=expression ')' thenStatement=execCode (ELSE elseStatement=execCode)?;
+ifStmt: IF '(' condition=expression ')' thenStatement=statement (ELSE elseStatement=statement)?;
 
 loopStmt
-    :   WHILE '(' condition=expression ')' loopBody=execCode                                                           #whileLoop
-    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=execCode   #forLoop
+    :   WHILE '(' condition=expression ')' loopBody=statement                                                           #whileLoop
+    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement   #forLoop
     ;
 
 jumpStmt
@@ -91,10 +89,13 @@ variableDecl: variableType baseVariableDecl (',' baseVariableDecl)* ';';
 
 baseVariableDecl: IDENTIFIER ('=' expression)?;
 
-functionDecl:IDENTIFIER;
+functionDecl: functionType? IDENTIFIER '(' parameterList? ')' block;
 
-classDecl:IDENTIFIER;
+parameterList: variableType IDENTIFIER (',' variableType IDENTIFIER)*;
 
+parameterListForCall: expression (',' expression)*;
+
+classDecl: CLASS classID=IDENTIFIER '{' (variableDecl|functionDecl)* '}' ';';
 
 
 
