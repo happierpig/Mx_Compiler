@@ -3,7 +3,8 @@ grammar Mx;
 @header{
 package MxCompiler.Parser;
 }
-program: subProgram*;
+
+program: execCode*;
 
 subProgram
     :   functionDecl
@@ -32,12 +33,27 @@ functionType
     ;
 
 // statement definition
+statement
+    :   (ifStmt | loopStmt | jumpStmt)      #unitStat
+    |   expression ';'                      #exprStat
+    |   variableDecl                        #variableDeclStat
+    |   ';'                                 #blankStmt
+    ;
+
+block: '{' execCode* '}';
+
+execCode
+    :   statement   #singleStatement
+    |   block       #codeBlock
+    ;
+
 expression
     :   IDENTIFIER                                                      #idnetifier
     |   constantValue                                                   #constant
     |   IDENTIFIER DOT IDENTIFIER                                       #objPortion
+    |   NEW allocFormat                                                 #allocExp
     |   '(' expression ')'                                              #compoundExp
-    |   arrayName=expression '[' index=expression ']'                   #arrayAccess
+    |   array=expression '[' index=expression ']'                       #arrayAccess
     |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression         #monocularOp
     |   operand1=expression op=('*'|'/'|'%') operand2=expression        #mdmOp
     |   operand1=expression op=('+'|'-') operand2=expression            #pmOp
@@ -52,13 +68,33 @@ expression
     |   <assoc=right> operand1=expression op='=' operand2=expression    #assignOp
     ;
 
+allocFormat
+    :   baseType ('[' arraySize=expression ']')+ ('[]')*    #allocArrayType
+    |   baseType '()'?                                      #allocBaseType
+    ;
 
+ifStmt: IF '(' condition=expression ')' thenStatement=execCode (ELSE elseStatement=execCode)?;
+
+loopStmt
+    :   WHILE '(' condition=expression ')' loopBody=execCode                                                           #whileLoop
+    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=execCode   #forLoop
+    ;
+
+jumpStmt
+    :   RETURN expression? ';'  #returnStmt
+    |   BREAK ';'               #breakStmt
+    |   CONTINUE ';'            #continueStmt
+    ;
+
+// declaration definition
+variableDecl: variableType baseVariableDecl (',' baseVariableDecl)* ';';
+
+baseVariableDecl: IDENTIFIER ('=' expression)?;
 
 functionDecl:IDENTIFIER;
 
 classDecl:IDENTIFIER;
 
-variableDecl:IDENTIFIER;
 
 
 
