@@ -13,7 +13,7 @@ subProgram
     ;
 
 // fundamental type parser
-constantValue: BOOL_CONSTANT | INTERGER_CONSTANT | STRING_CONSTANT;
+constantValue: BOOL_CONSTANT | INTERGER_CONSTANT | STRING_CONSTANT | NULL_CONSTANT;
 
 baseType
     :   INT         #baseType_Int
