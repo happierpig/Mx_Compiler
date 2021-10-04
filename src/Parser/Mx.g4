@@ -51,9 +51,11 @@ expression
     |   expression '(' parameterListForCall? ')'                                    #functionCall
     |   '(' expression ')'                                                          #compoundExp
     |   array=expression '[' index=expression ']'                                   #arrayAccess
+    |   expression ('++'|'--')                                                      #monocularOp
     |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression                     #monocularOp
     |   operand1=expression op=('*'|'/'|'%') operand2=expression                    #mdmOp
     |   operand1=expression op=('+'|'-') operand2=expression                        #pmOp
+    |   <assoc=right> ('-'|'+') expression                                          #negOp
     |   operand1=expression op=('>>'|'<<') operand2=expression                      #shiftOp
     |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression              #compareOp
     |   operand1=expression op=('=='|'!=') operand2=expression                      #compareOp
