@@ -1,7 +1,7 @@
 grammar Mx;
 
 @header{
-package MxCompiler.Parser;
+package Parser;
 }
 
 program: subProgram*;
