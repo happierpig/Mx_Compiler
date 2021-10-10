@@ -1,0 +1,16 @@
+package AST;
+
+import Utils.Position;
+
+import java.util.ArrayList;
+
+public class FuncCallExprNode extends ExprNode{
+    private ExprNode Func;
+    private ArrayList<ExprNode> AryList;
+
+    public FuncCallExprNode(ExprNode _Func,ArrayList<ExprNode> _List,Position _pos){
+        super(_pos);
+        this.Func = _Func;
+        this.AryList = _List;
+    }
+}
