@@ -4,6 +4,7 @@ package AST;
 import Utils.Position;
 
 public class ArrayTypeNode extends TypeNode{
+    // record baseType and array dimension.
     private TypeNode noArrType;
     private int dimSize;
 

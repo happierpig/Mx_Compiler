@@ -1,6 +1,4 @@
 import Utils.MxErrorListener;
-import Utils.Position;
-import Utils.SyntaxError;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -30,7 +28,6 @@ public class Main {
             parser.addErrorListener(new MxErrorListener());
             // start parsing according to the program rule
             ParseTree parseTreeRoot = parser.program();
-
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
             throw new RuntimeException();
