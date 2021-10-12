@@ -19,4 +19,9 @@ public class ArrayTypeNode extends TypeNode{
             this.dimSize = 1;
         }
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

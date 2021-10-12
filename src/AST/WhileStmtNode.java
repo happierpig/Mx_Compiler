@@ -11,4 +11,9 @@ public class WhileStmtNode extends StmtNode{
         this.condition = _condition;
         this.loopBody = _body;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

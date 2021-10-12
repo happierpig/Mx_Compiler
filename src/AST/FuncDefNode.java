@@ -16,4 +16,9 @@ public class FuncDefNode extends ASTNode{
         this.parameterList = _list;
         this.funcBody = _body;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

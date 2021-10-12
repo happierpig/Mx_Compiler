@@ -14,4 +14,9 @@ public class MonoExprNode extends ExprNode{
         this.operator = _op;
         this.operand = _operand;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

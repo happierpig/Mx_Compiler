@@ -15,4 +15,9 @@ public class ClassDefNode extends ASTNode{
         this.memberVariable = _var;
         this.memberFunction = _func;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

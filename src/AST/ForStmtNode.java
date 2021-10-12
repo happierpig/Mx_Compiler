@@ -13,4 +13,9 @@ public class ForStmtNode extends StmtNode{
         this.iteration = _iteration;
         this.loopBody = _body;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

@@ -14,4 +14,9 @@ public class RootNode extends ASTNode{
         this.classes = _class;
         this.global_variables = _var;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

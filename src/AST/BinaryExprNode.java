@@ -12,4 +12,9 @@ public class BinaryExprNode extends ExprNode{
         this.ROperand = _ROperand;
         this.operator = op;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

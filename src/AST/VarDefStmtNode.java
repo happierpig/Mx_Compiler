@@ -12,4 +12,8 @@ public class VarDefStmtNode extends StmtNode{
         this.elements = _list;
     }
 
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

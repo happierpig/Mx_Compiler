@@ -13,4 +13,9 @@ public class FuncCallExprNode extends ExprNode{
         this.Func = _Func;
         this.AryList = _List;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

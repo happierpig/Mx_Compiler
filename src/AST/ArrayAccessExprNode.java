@@ -11,4 +11,9 @@ public class ArrayAccessExprNode extends ExprNode{
         this.array = _array;
         this.index = _index;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

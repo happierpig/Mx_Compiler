@@ -13,4 +13,9 @@ public class VarDefNode extends ASTNode{
         this.initValue = _initVal;
         this.varType = _type;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

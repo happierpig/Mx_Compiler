@@ -12,4 +12,9 @@ public class ObjectMemberExprNode extends ExprNode{
         this.member = _member;
     }
 
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

@@ -13,4 +13,9 @@ public class NewExprNode extends ExprNode{
         this.DimSize = _size;
         this.SizeList = _List;
     }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }
