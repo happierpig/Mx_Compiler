@@ -40,41 +40,77 @@ public interface MxListener extends ParseTreeListener {
 	 */
 	void exitCodeBlock(MxParser.CodeBlockContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code unitStat}
+	 * Enter a parse tree produced by the {@code ifStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void enterUnitStat(MxParser.UnitStatContext ctx);
+	void enterIfStatement(MxParser.IfStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code unitStat}
+	 * Exit a parse tree produced by the {@code ifStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void exitUnitStat(MxParser.UnitStatContext ctx);
+	void exitIfStatement(MxParser.IfStatementContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code exprStat}
+	 * Enter a parse tree produced by the {@code whileStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprStat(MxParser.ExprStatContext ctx);
+	void enterWhileStatement(MxParser.WhileStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code exprStat}
+	 * Exit a parse tree produced by the {@code whileStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprStat(MxParser.ExprStatContext ctx);
+	void exitWhileStatement(MxParser.WhileStatementContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code variableDeclStat}
+	 * Enter a parse tree produced by the {@code forStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void enterVariableDeclStat(MxParser.VariableDeclStatContext ctx);
+	void enterForStatement(MxParser.ForStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code variableDeclStat}
+	 * Exit a parse tree produced by the {@code forStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
-	void exitVariableDeclStat(MxParser.VariableDeclStatContext ctx);
+	void exitForStatement(MxParser.ForStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code jumpStatment}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterJumpStatment(MxParser.JumpStatmentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code jumpStatment}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitJumpStatment(MxParser.JumpStatmentContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code exprStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprStmt(MxParser.ExprStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprStmt(MxParser.ExprStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code variableDeclStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterVariableDeclStmt(MxParser.VariableDeclStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code variableDeclStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitVariableDeclStmt(MxParser.VariableDeclStmtContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code blankStmt}
 	 * labeled alternative in {@link MxParser#statement}.
@@ -275,30 +311,6 @@ public interface MxListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIfStmt(MxParser.IfStmtContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code whileLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterWhileLoop(MxParser.WhileLoopContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code whileLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitWhileLoop(MxParser.WhileLoopContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code forLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterForLoop(MxParser.ForLoopContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code forLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitForLoop(MxParser.ForLoopContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code returnStmt}
 	 * labeled alternative in {@link MxParser#jumpStmt}.

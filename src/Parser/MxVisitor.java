@@ -30,26 +30,47 @@ public interface MxVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCodeBlock(MxParser.CodeBlockContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code unitStat}
+	 * Visit a parse tree produced by the {@code ifStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitUnitStat(MxParser.UnitStatContext ctx);
+	T visitIfStatement(MxParser.IfStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprStat}
+	 * Visit a parse tree produced by the {@code whileStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprStat(MxParser.ExprStatContext ctx);
+	T visitWhileStatement(MxParser.WhileStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code variableDeclStat}
+	 * Visit a parse tree produced by the {@code forStatement}
 	 * labeled alternative in {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVariableDeclStat(MxParser.VariableDeclStatContext ctx);
+	T visitForStatement(MxParser.ForStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code jumpStatment}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitJumpStatment(MxParser.JumpStatmentContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprStmt(MxParser.ExprStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code variableDeclStmt}
+	 * labeled alternative in {@link MxParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariableDeclStmt(MxParser.VariableDeclStmtContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code blankStmt}
 	 * labeled alternative in {@link MxParser#statement}.
@@ -167,20 +188,6 @@ public interface MxVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIfStmt(MxParser.IfStmtContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code whileLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitWhileLoop(MxParser.WhileLoopContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code forLoop}
-	 * labeled alternative in {@link MxParser#loopStmt}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitForLoop(MxParser.ForLoopContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code returnStmt}
 	 * labeled alternative in {@link MxParser#jumpStmt}.

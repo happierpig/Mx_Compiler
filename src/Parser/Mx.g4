@@ -10,11 +10,14 @@ subProgram
 
 // statement definition
 statement
-    :   block                               #codeBlock
-    |   (ifStmt | loopStmt | jumpStmt)      #unitStat
-    |   expression ';'                      #exprStat
-    |   variableDecl                        #variableDeclStat
-    |   ';'                                 #blankStmt
+    :   block                                                                                                           #codeBlock
+    |   ifStmt                                                                                                          #ifStatement
+    |   WHILE '(' condition=expression ')' loopBody=statement                                                           #whileStatement
+    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement   #forStatement
+    |   jumpStmt                                                                                                        #jumpStatment
+    |   expression ';'                                                                                                  #exprStmt
+    |   variableDecl                                                                                                    #variableDeclStmt
+    |   ';'                                                                                                             #blankStmt
     ;
 
 block: '{' statement* '}';
@@ -51,11 +54,6 @@ allocFormat
     ;
 
 ifStmt: IF '(' condition=expression ')' thenStatement=statement (ELSE elseStatement=statement)?;
-
-loopStmt
-    :   WHILE '(' condition=expression ')' loopBody=statement                                                           #whileLoop
-    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement   #forLoop
-    ;
 
 jumpStmt
     :   RETURN expression? ';'  #returnStmt
