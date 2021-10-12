@@ -8,6 +8,7 @@ public class ArrayTypeNode extends TypeNode{
     private TypeNode noArrType;
     private int dimSize;
 
+    // visitArrayType : iteration operation
     public ArrayTypeNode(TypeNode _base, Position _pos){
         super(_base.getType(),_pos);
         if(_base instanceof ArrayTypeNode){

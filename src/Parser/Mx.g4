@@ -3,29 +3,9 @@ grammar Mx;
 program: subProgram*;
 
 subProgram
-    :   functionDecl    #functionDeclaration
-    |   classDecl       #classDeclaration
-    |   variableDecl    #variableDeclaration
-    ;
-
-// fundamental type parser
-constantValue: BOOL_CONSTANT | INTERGER_CONSTANT | STRING_CONSTANT | NULL_CONSTANT;
-
-baseType
-    :   INT         #baseType_Int
-    |   BOOL        #baseType_Bool
-    |   STRING      #baseType_String
-    |   IDENTIFIER  #customizedVariableType
-    ;
-
-variableType
-    :   baseType            #baseVariableType
-    |   variableType '[' ']'  #array_Type
-    ;
-
-functionType
-    : variableType
-    | VOID
+    :   functionDecl
+    |   classDecl
+    |   variableDecl
     ;
 
 // statement definition
@@ -47,27 +27,27 @@ expression
     |   expression '(' parameterListForCall? ')'                                    #functionCall
     |   '(' expression ')'                                                          #compoundExp
     |   array=expression '[' index=expression ']'                                   #arrayAccess
-    |   operand=expression op=('++'|'--')                                           #monocularOp
+    |   operand=expression op=('++'|'--')                                           #aftermonocularOp
     |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression                     #monocularOp
-    |   operand1=expression op=('*'|'/'|'%') operand2=expression                    #mdmOp
-    |   operand1=expression op=('+'|'-') operand2=expression                        #pmOp
-    |   <assoc=right> ('-'|'+') expression                                          #negOp
-    |   operand1=expression op=('>>'|'<<') operand2=expression                      #shiftOp
-    |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression              #compareOp
-    |   operand1=expression op=('=='|'!=') operand2=expression                      #compareOp
-    |   operand1=expression op='&' operand2=expression                              #bitwiseOp
-    |   operand1=expression op='^' operand2=expression                              #bitwiseOp
-    |   operand1=expression op='|' operand2=expression                              #bitwiseOp
-    |   operand1=expression op='&&' operand2=expression                             #logicOp
-    |   operand1=expression op='||' operand2=expression                             #logicOp
-    |   <assoc=right> operand1=expression op='=' operand2=expression                #assignOp
+    |   operand1=expression op=('*'|'/'|'%') operand2=expression                    #binaryExpr
+    |   operand1=expression op=('+'|'-') operand2=expression                        #binaryExpr
+    |   <assoc=right> op=('-'|'+') expression                                       #monocularOp
+    |   operand1=expression op=('>>'|'<<') operand2=expression                      #binaryExpr
+    |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression              #binaryExpr
+    |   operand1=expression op=('=='|'!=') operand2=expression                      #binaryExpr
+    |   operand1=expression op='&' operand2=expression                              #binaryExpr
+    |   operand1=expression op='^' operand2=expression                              #binaryExpr
+    |   operand1=expression op='|' operand2=expression                              #binaryExpr
+    |   operand1=expression op='&&' operand2=expression                             #binaryExpr
+    |   operand1=expression op='||' operand2=expression                             #binaryExpr
+    |   <assoc=right> operand1=expression op='=' operand2=expression                #binaryExpr
     |   THIS                                                                        #objectPointer
     |   LAMBDAS1 lambdaParameterList? LAMBDAS2 block '(' parameterListForCall? ')'  #lambdaExp
     ;
 
 allocFormat
-    :   baseType ('[' arraySize=expression ']')+ ('[' ']')*      #allocArrayType
-    |   baseType ('(' ')')?                                      #allocBaseType
+    :   baseType ('[' expression ']')+ ('[' ']')*       #allocArrayType
+    |   baseType ('(' ')')?                             #allocBaseType
     ;
 
 ifStmt: IF '(' condition=expression ')' thenStatement=statement (ELSE elseStatement=statement)?;
@@ -97,6 +77,25 @@ lambdaParameterList: '(' parameterList? ')';
 parameterListForCall: expression (',' expression)*;
 
 classDecl: CLASS classID=IDENTIFIER '{' (variableDecl|functionDecl)* '}' ';';
+
+constantValue: BOOL_CONSTANT | INTERGER_CONSTANT | STRING_CONSTANT | NULL_CONSTANT;
+
+baseType
+    :   INT
+    |   BOOL
+    |   STRING
+    |   IDENTIFIER
+    ;
+
+variableType
+    :   baseType                #baseVariableType
+    |   variableType '[' ']'    #array_Type
+    ;
+
+functionType
+    : variableType
+    | VOID
+    ;
 
 //symbols
 DOT: '.';

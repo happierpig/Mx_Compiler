@@ -7,4 +7,7 @@ public abstract class ASTNode{
     public ASTNode(Position _pos){
         this.pos = _pos;
     }
+    public Position getPos(){
+        return pos;
+    }
 }
