@@ -3,9 +3,13 @@ package AST;
 import Parser.MxBaseVisitor;
 import Parser.MxParser;
 import Utils.Position;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.swing.text.html.parser.Parser;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ASTBuilder extends MxBaseVisitor<ASTNode>{
 
@@ -119,27 +123,15 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
     public ASTNode visitMonocularOp(MxParser.MonocularOpContext ctx) {
         String op = ctx.op.getText();
         ExprNode tmpNode = (ExprNode) visit(ctx.operand);
-        MonoExprNode.Op tmpOp = null;
-        switch(op){
-            case "++":
-                tmpOp = MonoExprNode.Op.PREINC;
-                break;
-            case "--":
-                tmpOp = MonoExprNode.Op.PREDEC;
-                break;
-            case "!":
-                tmpOp = MonoExprNode.Op.LNOT;
-                break;
-            case "~":
-                tmpOp = MonoExprNode.Op.BITNOT;
-                break;
-            case "-":
-                tmpOp = MonoExprNode.Op.NEG;
-                break;
-            case "+":
-                tmpOp = MonoExprNode.Op.POS;
-                break;
-        }
+        MonoExprNode.Op tmpOp = switch (op) {
+            case "++" -> MonoExprNode.Op.PREINC;
+            case "--" -> MonoExprNode.Op.PREDEC;
+            case "!" -> MonoExprNode.Op.LNOT;
+            case "~" -> MonoExprNode.Op.BITNOT;
+            case "-" -> MonoExprNode.Op.NEG;
+            case "+" -> MonoExprNode.Op.POS;
+            default -> throw new RuntimeException("[debug] 3");
+        };
         return new MonoExprNode(tmpOp,tmpNode,new Position(ctx));
     }
 
@@ -148,50 +140,173 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
         String op = ctx.op.getText();
         ExprNode ls = (ExprNode) visit(ctx.operand1);
         ExprNode rs = (ExprNode) visit(ctx.operand2);
-        BinaryExprNode.Op tmpOp = null;
-        switch(op){
-            case ">":
-                tmpOp = BinaryExprNode.Op.GT;
-                break;
-            case "<":
-                tmpOp = BinaryExprNode.Op.LT;
-                break;
-            case ">=":
-                tmpOp = BinaryExprNode.Op.GE;
-                break;
-            case "<=":
-                tmpOp = BinaryExprNode.Op.LE;
-                break;
-            case "==":
-                tmpOp = BinaryExprNode.Op.EQ;
-                break;
-            case "!=":
-                tmpOp = BinaryExprNode.Op.NE;
-                break;
-            case ">>":
-                tmpOp = BinaryExprNode.Op.SHR;
-                break;
-            case "<<":
-                tmpOp = BinaryExprNode.Op.SHL;
-                break;
-            case "*":
-                tmpOp = BinaryExprNode.Op.MUL;
-                break;
-            case "/":
-                tmpOp = BinaryExprNode.Op.DIV;
-                break;
-            case "%":
-                tmpOp = BinaryExprNode.Op.MOD;
-                break;
-            case "+":
-                tmpOp = BinaryExprNode.Op.ADD;
-                break;
-            case "-":
-                tmpOp = BinaryExprNode.Op.SUB;
-                break;
-                case ""
-
-        }
+        BinaryExprNode.Op tmpOp = switch (op) {
+            case ">" -> BinaryExprNode.Op.GT;
+            case "<" -> BinaryExprNode.Op.LT;
+            case ">=" -> BinaryExprNode.Op.GE;
+            case "<=" -> BinaryExprNode.Op.LE;
+            case "==" -> BinaryExprNode.Op.EQ;
+            case "!=" -> BinaryExprNode.Op.NE;
+            case ">>" -> BinaryExprNode.Op.SHR;
+            case "<<" -> BinaryExprNode.Op.SHL;
+            case "*" -> BinaryExprNode.Op.MUL;
+            case "/" -> BinaryExprNode.Op.DIV;
+            case "%" -> BinaryExprNode.Op.MOD;
+            case "+" -> BinaryExprNode.Op.ADD;
+            case "-" -> BinaryExprNode.Op.SUB;
+            case "&" -> BinaryExprNode.Op.AND;
+            case "^" -> BinaryExprNode.Op.XOR;
+            case "|" -> BinaryExprNode.Op.OR;
+            case "&&" -> BinaryExprNode.Op.LAND;
+            case "||" -> BinaryExprNode.Op.LOR;
+            case "=" -> BinaryExprNode.Op.ASSIGN;
+            default -> throw new RuntimeException("[debug] 2");
+        };
         return new BinaryExprNode(tmpOp,new Position(ctx),ls,rs);
+    }
+
+    //statement node
+
+    @Override
+    public ASTNode visitBlock(MxParser.BlockContext ctx) {
+        ArrayList<StmtNode> _List = new ArrayList<>();
+        if(ctx.statement() != null){
+            ctx.statement().forEach(tmp->_List.add((StmtNode) visit(tmp)));
+            return new BlockStmtNode(_List,new Position(ctx));
+        }else return new BlockStmtNode(null,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitCodeBlock(MxParser.CodeBlockContext ctx) {
+        return visit(ctx.block());
+    }
+
+    @Override
+    public ASTNode visitIfStmt(MxParser.IfStmtContext ctx) {
+        ExprNode cdt = (ExprNode) visit(ctx.condition);
+        StmtNode thenStmt = (StmtNode) visit(ctx.thenStatement);
+        StmtNode elseStmt = (ctx.elseStatement == null) ? null : (StmtNode) visit(ctx.elseStatement);
+        return new IfStmtNode(cdt,thenStmt,elseStmt,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitIfStatement(MxParser.IfStatementContext ctx) {
+        return visit(ctx.ifStmt());
+    }
+
+    @Override
+    public ASTNode visitWhileStatement(MxParser.WhileStatementContext ctx) {
+        ExprNode cdt = (ExprNode) visit(ctx.condition);
+        StmtNode body = (StmtNode) visit(ctx.loopBody);
+        return new WhileStmtNode(cdt,body,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitForStatement(MxParser.ForStatementContext ctx) {
+        StmtNode init = null;
+        if(ctx.initDecl != null) init = (StmtNode) visit(ctx.initDecl);
+        else if(ctx.initExpr != null) init = (StmtNode) visit(ctx.initExpr);
+        StmtNode loopBody = (StmtNode) visit(ctx.loopBody);
+        ExprNode cdt = (ctx.condition == null) ? null : (ExprNode) visit(ctx.condition);
+        ExprNode incr = (ctx.incrExp == null) ? null : (ExprNode) visit(ctx.incrExp);
+        return new ForStmtNode(init,cdt,incr,loopBody,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitReturnStmt(MxParser.ReturnStmtContext ctx) {
+        ExprNode returnVal = (ctx.expression() == null) ? null : (ExprNode) visit(ctx.expression());
+        return new ReturnStmtNode(returnVal,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitBreakStmt(MxParser.BreakStmtContext ctx) {
+        return new BreakStmtNode(new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitContinueStmt(MxParser.ContinueStmtContext ctx) {
+        return new ContinueStmtNode(new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitJumpStatment(MxParser.JumpStatmentContext ctx) {
+        return visit(ctx.jumpStmt());
+    }
+
+    @Override
+    public ASTNode visitExprStmt(MxParser.ExprStmtContext ctx) {
+        return new ExprStmtNode((ExprNode) visit(ctx.expression()),new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitVariableDeclStmt(MxParser.VariableDeclStmtContext ctx) {
+        return visit(ctx.variableDecl());
+    }
+
+    //  declaration
+
+    @Override
+    public ASTNode visitVariableDecl(MxParser.VariableDeclContext ctx) {
+        TypeNode varType = (TypeNode) visit(ctx.variableType());
+        ArrayList<VarDefNode> _List = new ArrayList<VarDefNode>();
+        for(MxParser.BaseVariableDeclContext element : ctx.baseVariableDecl()){
+            String id = element.IDENTIFIER().getText();
+            ExprNode initVal = (element.expression() == null) ? null : (ExprNode) visit(element.expression());
+            _List.add(new VarDefNode(varType,id,initVal,new Position(element)));
+        }
+        return new VarDefStmtNode(_List,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitFunctionDecl(MxParser.FunctionDeclContext ctx) {
+        TypeNode funcType = (ctx.functionType() == null) ? null : (TypeNode) visit(ctx.functionType());
+        String funcName = ctx.IDENTIFIER().getText();
+        BlockStmtNode funcBody = (BlockStmtNode) visit(ctx.block());
+        ArrayList<VarDefNode> aryList = new ArrayList<VarDefNode>();
+        if(ctx.parameterList() == null) return new FuncDefNode(funcType,funcName,null,funcBody,new Position(ctx));
+        else{
+            List<MxParser.VariableTypeContext> vtl = ctx.parameterList().variableType();
+            List<TerminalNode> vil = ctx.parameterList().IDENTIFIER();
+            for(int i = 0;i < vtl.size();i++){
+                aryList.add(new VarDefNode((TypeNode) visit(vtl.get(i)),vil.get(i).getText(),null,new Position(vtl.get(i))));
+            }
+            return new FuncDefNode(funcType,funcName,aryList,funcBody,new Position(ctx));
+        }
+    }
+
+    @Override
+    public ASTNode visitClassDecl(MxParser.ClassDeclContext ctx) {
+        String classId = ctx.classID.getText();
+        ArrayList<VarDefStmtNode> memberList = new ArrayList<VarDefStmtNode>();
+        ArrayList<FuncDefNode> funcList = new ArrayList<FuncDefNode>();
+        if(ctx.variableDecl() != null) ctx.variableDecl().forEach(tmp->memberList.add((VarDefStmtNode) visit(tmp)));
+        if(ctx.functionDecl() != null) ctx.functionDecl().forEach(tmp->funcList.add((FuncDefNode) visit(tmp)));
+        return new ClassDefNode(classId,ctx.variableDecl() == null ? null : memberList,ctx.functionDecl() == null ? null : funcList,new Position(ctx));
+    }
+
+    // program body
+
+
+    @Override
+    public ASTNode visitProgram(MxParser.ProgramContext ctx) {
+        boolean hasFunc = false,hasClass = false,hasVar = false;
+        ArrayList<FuncDefNode> functions = new ArrayList<>();
+        ArrayList<ClassDefNode> classes = new ArrayList<>();
+        ArrayList<VarDefStmtNode> global_variables = new ArrayList<>();
+        for(MxParser.SubProgramContext elements : ctx.subProgram()){
+            if(elements.functionDecl() != null){
+                hasFunc = true;
+                functions.add((FuncDefNode) visit(elements.functionDecl()));
+            }
+            if(elements.classDecl() != null){
+                hasClass = true;
+                classes.add((ClassDefNode) visit(elements.classDecl()));
+            }
+            if(elements.variableDecl() != null){
+                hasVar = true;
+                global_variables.add((VarDefStmtNode) visit(elements.variableDecl()));
+            }
+        }
+        return new RootNode(hasFunc ? functions : null,hasClass ? classes : null,hasVar ? global_variables : null,new Position(ctx));
     }
 }

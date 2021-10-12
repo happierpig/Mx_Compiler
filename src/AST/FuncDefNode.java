@@ -4,7 +4,7 @@ import Utils.Position;
 import java.util.ArrayList;
 
 public class FuncDefNode extends ASTNode{
-    private TypeNode funcType;
+    private TypeNode funcType; // void is distinguished from constructor,for void is voidTypeNode and constructor is null
     private String identifier;
     private ArrayList<VarDefNode> parameterList;
     private BlockStmtNode funcBody;
