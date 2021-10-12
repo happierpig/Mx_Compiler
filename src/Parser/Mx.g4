@@ -5,7 +5,7 @@ program: subProgram*;
 subProgram
     :   functionDecl
     |   classDecl
-    |   variableDecl
+    |   variableDecl ';'
     ;
 
 // statement definition
@@ -16,7 +16,7 @@ statement
     |   FOR '(' (initDecl=variableDecl | initExpr=expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement     #forStatement
     |   jumpStmt                                                                                                                            #jumpStatment
     |   expression ';'                                                                                                                      #exprStmt
-    |   variableDecl                                                                                                                        #variableDeclStmt
+    |   variableDecl ';'                                                                                                                    #variableDeclStmt
     |   ';'                                                                                                                                 #blankStmt
     ;
 
@@ -34,7 +34,7 @@ expression
     |   <assoc=right> op=('!'|'~'|'++'|'--') operand=expression                     #monocularOp
     |   operand1=expression op=('*'|'/'|'%') operand2=expression                    #binaryExpr
     |   operand1=expression op=('+'|'-') operand2=expression                        #binaryExpr
-    |   <assoc=right> op=('-'|'+') expression                                       #monocularOp
+    |   <assoc=right> op=('-'|'+') operand=expression                               #monocularOp
     |   operand1=expression op=('>>'|'<<') operand2=expression                      #binaryExpr
     |   operand1=expression op=('>'|'<'|'>='|'<=') operand2=expression              #binaryExpr
     |   operand1=expression op=('=='|'!=') operand2=expression                      #binaryExpr
@@ -62,7 +62,7 @@ jumpStmt
     ;
 
 // declaration definition
-variableDecl: variableType baseVariableDecl (',' baseVariableDecl)* ';';
+variableDecl: variableType baseVariableDecl (',' baseVariableDecl)* ;
 
 baseVariableDecl: IDENTIFIER ('=' expression)?;
 
@@ -74,7 +74,7 @@ lambdaParameterList: '(' parameterList? ')';
 
 parameterListForCall: expression (',' expression)*;
 
-classDecl: CLASS classID=IDENTIFIER '{' (variableDecl|functionDecl)* '}' ';';
+classDecl: CLASS classID=IDENTIFIER '{' ((variableDecl ';')|functionDecl)* '}' ';';
 
 constantValue: BOOL_CONSTANT | INTERGER_CONSTANT | STRING_CONSTANT | NULL_CONSTANT;
 

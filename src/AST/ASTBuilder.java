@@ -205,7 +205,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
     public ASTNode visitForStatement(MxParser.ForStatementContext ctx) {
         StmtNode init = null;
         if(ctx.initDecl != null) init = (StmtNode) visit(ctx.initDecl);
-        else if(ctx.initExpr != null) init = (StmtNode) visit(ctx.initExpr);
+        else if(ctx.initExpr != null) init = new ExprStmtNode((ExprNode) visit(ctx.initExpr),new Position(ctx.initExpr));
         StmtNode loopBody = (StmtNode) visit(ctx.loopBody);
         ExprNode cdt = (ctx.condition == null) ? null : (ExprNode) visit(ctx.condition);
         ExprNode incr = (ctx.incrExp == null) ? null : (ExprNode) visit(ctx.incrExp);
