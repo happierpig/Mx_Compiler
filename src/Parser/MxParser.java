@@ -336,6 +336,8 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class ForStatementContext extends StatementContext {
+		public VariableDeclContext initDecl;
+		public ExpressionContext initExpr;
 		public ExpressionContext condition;
 		public ExpressionContext incrExp;
 		public StatementContext loopBody;
@@ -479,13 +481,13 @@ public class MxParser extends Parser {
 				case 1:
 					{
 					setState(59);
-					variableDecl();
+					((ForStatementContext)_localctx).initDecl = variableDecl();
 					}
 					break;
 				case 2:
 					{
 					setState(60);
-					expression(0);
+					((ForStatementContext)_localctx).initExpr = expression(0);
 					}
 					break;
 				}

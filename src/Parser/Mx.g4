@@ -10,14 +10,14 @@ subProgram
 
 // statement definition
 statement
-    :   block                                                                                                           #codeBlock
-    |   ifStmt                                                                                                          #ifStatement
-    |   WHILE '(' condition=expression ')' loopBody=statement                                                           #whileStatement
-    |   FOR '(' (variableDecl | expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement   #forStatement
-    |   jumpStmt                                                                                                        #jumpStatment
-    |   expression ';'                                                                                                  #exprStmt
-    |   variableDecl                                                                                                    #variableDeclStmt
-    |   ';'                                                                                                             #blankStmt
+    :   block                                                                                                                               #codeBlock
+    |   ifStmt                                                                                                                              #ifStatement
+    |   WHILE '(' condition=expression ')' loopBody=statement                                                                               #whileStatement
+    |   FOR '(' (initDecl=variableDecl | initExpr=expression)? ';' condition=expression? ';' incrExp=expression? ')' loopBody=statement     #forStatement
+    |   jumpStmt                                                                                                                            #jumpStatment
+    |   expression ';'                                                                                                                      #exprStmt
+    |   variableDecl                                                                                                                        #variableDeclStmt
+    |   ';'                                                                                                                                 #blankStmt
     ;
 
 block: '{' statement* '}';
