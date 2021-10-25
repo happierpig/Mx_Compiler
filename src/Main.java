@@ -1,3 +1,5 @@
+import AST.ASTBuilder;
+import AST.RootNode;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -28,6 +30,11 @@ public class Main {
             parser.addErrorListener(new MxErrorListener());
             // start parsing according to the program rule
             ParseTree parseTreeRoot = parser.program();
+
+            ASTBuilder test = new ASTBuilder();
+            RootNode rt = (RootNode) test.visit(parseTreeRoot);
+
+            int x = 1;
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
             throw new RuntimeException();

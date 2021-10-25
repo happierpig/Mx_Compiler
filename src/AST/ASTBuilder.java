@@ -3,6 +3,7 @@ package AST;
 import Parser.MxBaseVisitor;
 import Parser.MxParser;
 import Utils.Position;
+import Utils.SyntaxError;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -66,6 +67,11 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
         ctx.expression().forEach(tmp->arraySize.add((ExprNode) visit(tmp)));
         int dimensions = (ctx.getChildCount() - arraySize.size() - 1) / 2;
         return new NewExprNode((TypeNode) visit(ctx.baseType()),dimensions,arraySize,new Position(ctx));
+    }
+
+    @Override
+    public ASTNode visitAllocErrorType(MxParser.AllocErrorTypeContext ctx) {
+        throw new SyntaxError("Wrong Syntax for array create",new Position(ctx));
     }
 
     //Expression node

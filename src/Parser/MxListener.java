@@ -278,6 +278,18 @@ public interface MxListener extends ParseTreeListener {
 	 */
 	void exitObjectPointer(MxParser.ObjectPointerContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code allocErrorType}
+	 * labeled alternative in {@link MxParser#allocFormat}.
+	 * @param ctx the parse tree
+	 */
+	void enterAllocErrorType(MxParser.AllocErrorTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code allocErrorType}
+	 * labeled alternative in {@link MxParser#allocFormat}.
+	 * @param ctx the parse tree
+	 */
+	void exitAllocErrorType(MxParser.AllocErrorTypeContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code allocArrayType}
 	 * labeled alternative in {@link MxParser#allocFormat}.
 	 * @param ctx the parse tree

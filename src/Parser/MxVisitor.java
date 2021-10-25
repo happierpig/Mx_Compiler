@@ -169,6 +169,13 @@ public interface MxVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitObjectPointer(MxParser.ObjectPointerContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code allocErrorType}
+	 * labeled alternative in {@link MxParser#allocFormat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAllocErrorType(MxParser.AllocErrorTypeContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code allocArrayType}
 	 * labeled alternative in {@link MxParser#allocFormat}.
 	 * @param ctx the parse tree

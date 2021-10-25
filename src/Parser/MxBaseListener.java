@@ -292,6 +292,18 @@ public class MxBaseListener implements MxListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAllocErrorType(MxParser.AllocErrorTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAllocErrorType(MxParser.AllocErrorTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAllocArrayType(MxParser.AllocArrayTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}

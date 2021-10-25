@@ -49,8 +49,9 @@ expression
     ;
 
 allocFormat
-    :   baseType ('[' expression ']')+ ('[' ']')*       #allocArrayType
-    |   baseType ('(' ')')?                             #allocBaseType
+    :   baseType ('[' expression ']')+ ('[' ']')+ ('[' expression ']')+ #allocErrorType
+    |   baseType ('[' expression ']')+ ('[' ']')*                       #allocArrayType
+    |   baseType ('(' ')')?                                             #allocBaseType
     ;
 
 ifStmt: IF '(' condition=expression ')' thenStatement=statement (ELSE elseStatement=statement)?;
