@@ -1,5 +1,8 @@
 import AST.ASTBuilder;
 import AST.RootNode;
+import FrontEnd.BuiltInInitiator;
+import FrontEnd.PreProcessor;
+import Utils.GlobalScope;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -33,7 +36,11 @@ public class Main {
 
             ASTBuilder test = new ASTBuilder();
             RootNode rt = (RootNode) test.visit(parseTreeRoot);
-
+            GlobalScope gScope = new GlobalScope();
+            BuiltInInitiator initialer = new BuiltInInitiator();
+            gScope = initialer.init(gScope);
+            PreProcessor preprocess = new PreProcessor(gScope);
+            preprocess.visit(rt);
             int x = 1;
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());

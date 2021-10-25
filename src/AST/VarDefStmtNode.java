@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 
 public class VarDefStmtNode extends StmtNode{
-    private ArrayList<VarDefNode> elements;
+    public ArrayList<VarDefNode> elements;
 
     public VarDefStmtNode(ArrayList<VarDefNode> _list,Position _pos){
         super(_pos);

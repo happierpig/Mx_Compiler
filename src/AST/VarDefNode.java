@@ -3,9 +3,9 @@ package AST;
 import Utils.Position;
 
 public class VarDefNode extends ASTNode{
-    private TypeNode varType;
-    private String identifier;
-    private ExprNode initValue;
+    public TypeNode varType;
+    public String identifier;
+    public ExprNode initValue;
 
     public VarDefNode(TypeNode _type,String _id,ExprNode _initVal,Position _pos){
         super(_pos);
