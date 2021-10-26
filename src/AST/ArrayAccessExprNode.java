@@ -3,8 +3,8 @@ package AST;
 import Utils.Position;
 
 public class ArrayAccessExprNode extends ExprNode{
-    private ExprNode array;
-    private ExprNode index;
+    public ExprNode array;
+    public ExprNode index;
 
     public ArrayAccessExprNode(ExprNode _array,ExprNode _index,Position _pos){
         super(_pos);

@@ -36,7 +36,7 @@ public class Main {
 
             ASTBuilder test = new ASTBuilder();
             RootNode rt = (RootNode) test.visit(parseTreeRoot);
-            GlobalScope gScope = new GlobalScope();
+            GlobalScope gScope = new GlobalScope(null);
             BuiltInInitiator initialer = new BuiltInInitiator();
             gScope = initialer.init(gScope);
             PreProcessor preprocess = new PreProcessor(gScope);

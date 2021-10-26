@@ -3,25 +3,209 @@ package FrontEnd;
 import AST.*;
 import Utils.*;
 
+import java.lang.reflect.Type;
+
 public class SemanticChecker implements ASTVisitor{
+    public Scope cScope;
+    public GlobalScope gScope;
+    private final TypeNode TypeNull,TypeVoid,TypeInt,TypeBool,TypeString;
+    private String nowClass;
+    public FuncDefNode FuncSize,nowFunc;
+    private final Position DefaultPosition;
+    public SemanticChecker(GlobalScope _gScope){
+        this.gScope = _gScope;
+        this.cScope = this.gScope;
+        DefaultPosition = new Position(-1,-1);
+        TypeNull = new ClassTypeNode("null",DefaultPosition);
+        TypeVoid = new VoidTypeNode(DefaultPosition);
+        TypeInt = new ClassTypeNode("int",DefaultPosition);
+        TypeBool = new ClassTypeNode("bool",DefaultPosition);
+        TypeString = new ClassTypeNode("string",DefaultPosition);
+        nowClass = null;
+        nowFunc = null;
+        FuncSize = new FuncDefNode(new ClassTypeNode("int",DefaultPosition),"size",null,null,DefaultPosition);
+    }
+
 
     @Override
-    public void visit(ArrayAccessExprNode node) {
-
+    public void visit(RootNode node) {
+        node.elements.forEach(tmp->tmp.accept(this));
     }
 
     @Override
-    public void visit(ArrayTypeNode node) {
+    public void visit(VarDefNode node) {
+        if(cScope.contains_Variable(node.identifier)) throw new SemanticError("Duplicate Variable Declaration " + node.identifier,node.getPos());
+        else if(!gScope.contains_Class(node.varType.typeId)) throw new SemanticError("Undefined Class " + node.varType.typeId,node.getPos());
+        else {
+            if(node.initValue != null){
+                node.initValue.accept(this);
+                if(!node.initValue.exprType.isEqual(TypeNull) && !node.initValue.exprType.isEqual(node.varType)) throw new SemanticError("Mismatched Class Type",node.getPos());
+            }
+            cScope.define_Variable(node.identifier,node.varType);
+        }
+    }
 
+    @Override
+    public void visit(VarDefStmtNode node) {
+        node.elements.forEach(tmp->tmp.accept(this));
+    }
+
+    @Override
+    public void visit(ClassDefNode node) {
+        cScope = gScope.Class_Table.get(node.classIdentifier); nowClass = node.classIdentifier;
+        for(VarDefStmtNode _list : node.memberVariable){
+            for(VarDefNode _tmp : _list.elements){
+                if(!gScope.contains_Class(_tmp.varType.typeId)) throw new SemanticError("Undefined Class " + _tmp.varType.typeId,_tmp.getPos());
+                if(_tmp.initValue != null){
+                    _tmp.initValue.accept(this);
+                    if(!_tmp.initValue.exprType.isEqual(TypeNull) && !_tmp.initValue.exprType.isEqual(_tmp.varType)) throw new SemanticError("Mismatched Class Type",_tmp.getPos());
+                }
+            }
+        }
+        node.memberFunction.forEach(tmp->tmp.accept(this));
+        cScope = cScope.parent; nowClass = null;
+    }
+
+    @Override
+    public void visit(FuncDefNode node) {
+        cScope = new Scope(cScope); nowFunc = node;
+        if(!node.funcType.isEqual(TypeVoid) && !gScope.contains_Class(node.funcType.typeId)) throw new SemanticError("Undefined Function Return Type" + node.funcType.typeId,node.getPos());
+        node.parameterList.forEach(tmp->tmp.accept(this));
+        node.funcBody.accept(this);
+        cScope = cScope.parent; nowFunc = null;
+    }
+
+    @Override
+    public void visit(IdentifierExprNode node) {
+        TypeNode idType = cScope.fetch_Variable_Type(node.identifier);
+        if(idType == null) throw new SemanticError("Undefined Variable " + node.identifier,node.getPos());
+        node.exprType = idType; node.isAssignable = true;
+    }
+
+    @Override
+    public void visit(NewExprNode node) {
+        if(!gScope.contains_Class(node.newType.typeId)) throw new SemanticError("Undefined Class Type",node.getPos());
+        node.SizeList.forEach(tmp->{
+            tmp.accept(this);
+            if(!tmp.exprType.isEqual(TypeInt)) throw new SemanticError("Array size should be int",node.getPos());
+        });
+        node.exprType = new ArrayTypeNode(node.newType.typeId,node.DimSize,node.getPos());
+        node.isAssignable = false;
+    }
+
+    @Override
+    public void visit(ObjectMemberExprNode node) {
+        node.base.accept(this);
+        if(node.base.exprType instanceof ArrayTypeNode){
+            if(!node.forFunc) throw new SemanticError("Array has no members",node.getPos());
+            if(!node.member.equals("size")) throw new SemanticError("Array has only size() built-in function.",node.getPos());
+            node.funcInfo = FuncSize;
+        }else{
+            if(node.forFunc){
+                node.funcInfo = gScope.Class_Table.get(node.base.exprType.typeId).fetch_Function(node.member);
+                if(node.funcInfo == null) throw new SemanticError("Class " + node.base.exprType.typeId + "has no function called " + node.member,node.getPos());
+            }else{
+                node.exprType = gScope.Class_Table.get(node.base.exprType.typeId).Variable_Table.get(node.member);
+                if(node.exprType == null) throw new SemanticError("Class " + node.base.exprType.typeId + "has no variable called " + node.member,node.getPos());
+                node.isAssignable = true;
+            }
+        }
+    }
+
+    @Override
+    public void visit(FuncCallExprNode node) {
+        FuncDefNode checkBase;
+        if(node.Func instanceof ObjectMemberExprNode){
+            ((ObjectMemberExprNode) (node.Func)).forFunc = true;
+            node.Func.accept(this);
+            checkBase = ((ObjectMemberExprNode) (node.Func)).funcInfo;
+        }else{
+            String funcName = ((IdentifierExprNode) node.Func).identifier;
+            checkBase = gScope.fetch_Function(funcName);
+            if(checkBase == null) throw new SemanticError("We don't have function named " + funcName,node.getPos());
+        }
+        node.AryList.forEach(tmp->tmp.accept(this));
+        if(checkBase.parameterList == null || node.AryList == null){
+            if(!(checkBase.parameterList == null && node.AryList == null)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+        }else{
+            if(checkBase.parameterList.size() != node.AryList.size()) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+            for (int i = 0; i < checkBase.parameterList.size(); i++) {
+                if(!checkBase.parameterList.get(i).varType.isEqual(node.AryList.get(i).exprType)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+            }
+        }
+        node.exprType = checkBase.funcType;
+        node.isAssignable = false;
+    }
+
+    @Override
+    public void visit(ArrayAccessExprNode node) {
+        node.array.accept(this);
+        if(!(node.array.exprType instanceof ArrayTypeNode)) throw new SemanticError("Try to index not Array Type",node.getPos());
+        node.index.accept(this);
+        if(!node.index.exprType.isEqual(TypeInt)) throw new SemanticError("Array Index is not int",node.getPos());
+        if(((ArrayTypeNode) node.array.exprType).dimSize == 1) node.exprType = new ClassTypeNode(node.array.exprType.typeId,node.getPos());
+        else node.exprType = new ArrayTypeNode(node.array.exprType.typeId,((ArrayTypeNode) node.array.exprType).dimSize-1,node.getPos());
+        node.isAssignable = true;
+    }
+
+    @Override
+    public void visit(MonoExprNode node) {
+        node.operand.accept(this);
+        if(!node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
+        switch(node.operator){
+            case PREINC,PREDEC,NEG,POS,AFTINC,AFTDEC,BITNOT->{
+                if(!node.operand.exprType.isEqual(TypeInt)) throw new SemanticError("Operand should be int",node.getPos());
+            }
+            case LNOT -> {
+                if(!node.operand.exprType.isEqual(TypeBool)) throw new SemanticError("Operand should be bool",node.getPos());
+            }
+        }
+        node.exprType = node.operand.exprType;
+        node.isAssignable = (node.operator == MonoExprNode.Op.PREINC || node.operator == MonoExprNode.Op.PREDEC);
     }
 
     @Override
     public void visit(BinaryExprNode node) {
-
+        node.LOperand.accept(this); node.ROperand.accept(this);
+        if(!node.LOperand.exprType.isEqual(node.ROperand.exprType)) throw new SemanticError("Type Dismatched in Binary Operation",node.getPos());
+        TypeNode nodeType = node.LOperand.exprType;
+        node.isAssignable = false;
+        switch(node.operator){
+            case ADD,GT,LT,GE,LE -> {
+                if(!nodeType.isEqual(TypeInt) || !nodeType.isEqual(TypeString)) throw new SemanticError("This operator requires specific type.1",node.getPos());
+            }
+            case SUB,MUL,DIV,MOD,SHL,SHR,AND,XOR,OR -> {
+                if(!nodeType.isEqual(TypeInt)) throw new SemanticError("This operator requires specific type.2",node.getPos());
+            }
+            case LAND,LOR -> {
+                if(!nodeType.isEqual(TypeBool)) throw new SemanticError("This operator requires specific type.3",node.getPos());
+            }
+            case ASSIGN -> {
+                if(!node.LOperand.isAssignable) throw new SemanticError("Left value is required",node.getPos());
+                node.isAssignable = true;
+            }
+        }
+        switch (node.operator){
+            case ADD,SUB,MUL,DIV,MOD,SHL,SHR,AND,XOR,OR,ASSIGN-> node.exprType = nodeType;
+            case GT,LT,GE,LE,EQ,NE,LAND,LOR -> node.exprType = TypeBool;
+        }
     }
 
     @Override
-    public void visit(BlockStmtNode node) {
+    public void visit(ThisExprNode node) {
+        if(nowClass == null) throw new SemanticError("Pointer this can only be used in Class Definition.",node.getPos());
+        node.exprType = new ClassTypeNode(nowClass,node.getPos());
+        node.isAssignable = true;
+    }
+
+    @Override
+    public void visit(ExprStmtNode node) {node.expr.accept(this);}
+
+    @Override
+    public void visit(BlockStmtNode node) {node.stmtList.forEach(tmp->tmp.accept(this));}
+
+    @Override
+    public void visit(ArrayTypeNode node) {
 
     }
 
@@ -36,11 +220,6 @@ public class SemanticChecker implements ASTVisitor{
     }
 
     @Override
-    public void visit(ClassDefNode Node) {
-
-    }
-
-    @Override
     public void visit(ClassTypeNode node) {
 
     }
@@ -51,27 +230,7 @@ public class SemanticChecker implements ASTVisitor{
     }
 
     @Override
-    public void visit(ExprStmtNode node) {
-
-    }
-
-    @Override
     public void visit(ForStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(FuncCallExprNode node) {
-
-    }
-
-    @Override
-    public void visit(FuncDefNode node) {
-
-    }
-
-    @Override
-    public void visit(IdentifierExprNode node) {
 
     }
 
@@ -86,22 +245,7 @@ public class SemanticChecker implements ASTVisitor{
     }
 
     @Override
-    public void visit(MonoExprNode node) {
-
-    }
-
-    @Override
-    public void visit(NewExprNode node) {
-
-    }
-
-    @Override
     public void visit(NullConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(ObjectMemberExprNode node) {
 
     }
 
@@ -111,27 +255,7 @@ public class SemanticChecker implements ASTVisitor{
     }
 
     @Override
-    public void visit(RootNode node) {
-
-    }
-
-    @Override
     public void visit(StringConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(ThisExprNode node) {
-
-    }
-
-    @Override
-    public void visit(VarDefStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(VarDefNode node) {
 
     }
 

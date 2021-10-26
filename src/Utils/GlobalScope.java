@@ -9,8 +9,8 @@ public class GlobalScope extends Scope{
     public Map<String,FuncDefNode> Functions_Table;
     public Map<String,GlobalScope> Class_Table;
 
-    public GlobalScope(){
-        super(null);
+    public GlobalScope(Scope _parent){
+        super(_parent);
         Functions_Table = new HashMap<>();
         Class_Table = new HashMap<>();
     }

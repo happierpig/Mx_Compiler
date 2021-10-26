@@ -35,9 +35,9 @@ public class BuiltInInitiator{
         initScope.define_Function("toString",tmp);
 
         //built-in class
-        initScope.define_Class("bool",new GlobalScope());
-        initScope.define_Class("int",new GlobalScope());
-        GlobalScope class_tmp = new GlobalScope(); tmp_List = new ArrayList<>();
+        initScope.define_Class("bool",new GlobalScope(initScope));
+        initScope.define_Class("int",new GlobalScope(initScope));
+        GlobalScope class_tmp = new GlobalScope(initScope); tmp_List = new ArrayList<>();
         class_tmp.define_Function("length",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"length",null,null,new Position(-1,-1)));
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"left",null,new Position(-1,-1)));
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"right",null,new Position(-1,-1)));

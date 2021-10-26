@@ -22,7 +22,7 @@ public class PreProcessor implements ASTVisitor{
     public void visit(ClassDefNode node) {
         if(this.gScope.contains_Class(node.classIdentifier) || this.gScope.contains_Function(node.classIdentifier)) throw new SemanticError("Duplicate Declaration " + node.classIdentifier,node.getPos());
         else {
-            GlobalScope forClass = new GlobalScope();
+            GlobalScope forClass = new GlobalScope(gScope);
             for(VarDefStmtNode tmp : node.memberVariable){
                 tmp.elements.forEach(var->{
                     if(forClass.contains_Variable(var.identifier)) throw new SemanticError("Duplicate Declaration Variable " + var.identifier + " in Class " + node.classIdentifier,tmp.getPos());

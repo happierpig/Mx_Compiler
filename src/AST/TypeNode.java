@@ -9,10 +9,6 @@ public abstract class TypeNode extends ASTNode {
         this.typeId = _id;
     }
 
-    public String getType(){
-        return typeId;
-    }
-
     public boolean isEqual(TypeNode other){
         if(this instanceof ClassTypeNode && other instanceof ClassTypeNode) return this.typeId.equals(other.typeId);
         if(this instanceof ArrayTypeNode && other instanceof ArrayTypeNode) return this.typeId.equals(other.typeId) && ((ArrayTypeNode) this).dimSize == ((ArrayTypeNode)other).dimSize;

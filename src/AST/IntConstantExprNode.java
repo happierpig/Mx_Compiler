@@ -3,11 +3,12 @@ package AST;
 import Utils.Position;
 
 public class IntConstantExprNode extends ExprNode{
-    private int value;
+    public int value;
 
     public IntConstantExprNode(int _v,Position _pos){
         super(_pos);
         this.value = _v;
+        this.exprType = new ClassTypeNode("int",_pos);
     }
 
     public int getValue(){

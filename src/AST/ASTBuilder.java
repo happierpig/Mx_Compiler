@@ -254,7 +254,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
     @Override
     public ASTNode visitVariableDecl(MxParser.VariableDeclContext ctx) {
         TypeNode varType = (TypeNode) visit(ctx.variableType());
-        ArrayList<VarDefNode> _List = new ArrayList<VarDefNode>();
+        ArrayList<VarDefNode> _List = new ArrayList<>();
         for(MxParser.BaseVariableDeclContext element : ctx.baseVariableDecl()){
             String id = element.IDENTIFIER().getText();
             ExprNode initVal = (element.expression() == null) ? null : (ExprNode) visit(element.expression());
