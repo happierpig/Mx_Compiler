@@ -5,8 +5,6 @@ import Utils.GlobalScope;
 import Utils.Position;
 import Utils.SemanticError;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class PreProcessor implements ASTVisitor{
     public GlobalScope gScope;
 
@@ -16,14 +14,13 @@ public class PreProcessor implements ASTVisitor{
 
     @Override
     public void visit(RootNode node) {
-        node.classes.forEach(tmp->tmp.accept(this));
-        node.functions.forEach(tmp->tmp.accept(this));
+        node.elements.forEach(tmp->tmp.accept(this));
         if(!this.gScope.contains_Function("main") || !this.gScope.fetch_Function("main").funcType.isEqual(new ClassTypeNode("int",new Position(-1,-1)))) throw new SemanticError("Where is main function ?",node.getPos());
     }
 
     @Override
     public void visit(ClassDefNode node) {
-        if(this.gScope.contains_Class(node.classIdentifier)) throw new SemanticError("Duplicate Declaration " + node.classIdentifier,node.getPos());
+        if(this.gScope.contains_Class(node.classIdentifier) || this.gScope.contains_Function(node.classIdentifier)) throw new SemanticError("Duplicate Declaration " + node.classIdentifier,node.getPos());
         else {
             GlobalScope forClass = new GlobalScope();
             for(VarDefStmtNode tmp : node.memberVariable){
@@ -43,7 +40,7 @@ public class PreProcessor implements ASTVisitor{
 
     @Override
     public void visit(FuncDefNode node) {
-        if(this.gScope.contains_Function(node.identifier)) throw new SemanticError("Duplicate Declaration Function " + node.identifier,node.getPos());
+        if(this.gScope.contains_Function(node.identifier) || this.gScope.contains_Class(node.identifier)) throw new SemanticError("Duplicate Declaration Function " + node.identifier,node.getPos());
         else if(node.funcType == null) throw new SemanticError("Constructor Declaration out of Class with " + node.identifier,node.getPos());
         else this.gScope.define_Function(node.identifier,node);
     }

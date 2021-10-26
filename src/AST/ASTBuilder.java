@@ -295,24 +295,12 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
 
     @Override
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
-        boolean hasFunc = false,hasClass = false,hasVar = false;
-        ArrayList<FuncDefNode> functions = new ArrayList<>();
-        ArrayList<ClassDefNode> classes = new ArrayList<>();
-        ArrayList<VarDefStmtNode> global_variables = new ArrayList<>();
+        ArrayList<ASTNode> _ele = new ArrayList<>();
         for(MxParser.SubProgramContext elements : ctx.subProgram()){
-            if(elements.functionDecl() != null){
-                hasFunc = true;
-                functions.add((FuncDefNode) visit(elements.functionDecl()));
-            }
-            if(elements.classDecl() != null){
-                hasClass = true;
-                classes.add((ClassDefNode) visit(elements.classDecl()));
-            }
-            if(elements.variableDecl() != null){
-                hasVar = true;
-                global_variables.add((VarDefStmtNode) visit(elements.variableDecl()));
-            }
+            if(elements.functionDecl() != null) _ele.add(visit(elements.functionDecl()));
+            if(elements.classDecl() != null) _ele.add(visit(elements.classDecl()));
+            if(elements.variableDecl() != null) _ele.add(visit(elements.variableDecl()));
         }
-        return new RootNode(hasFunc ? functions : null,hasClass ? classes : null,hasVar ? global_variables : null,new Position(ctx));
+        return new RootNode(_ele,new Position(ctx));
     }
 }
