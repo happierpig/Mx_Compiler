@@ -12,6 +12,7 @@ public class SemanticChecker implements ASTVisitor{
     private String nowClass;
     public FuncDefNode FuncSize,nowFunc;
     private final Position DefaultPosition;
+    public int loops;
     public SemanticChecker(GlobalScope _gScope){
         this.gScope = _gScope;
         this.cScope = this.gScope;
@@ -23,6 +24,7 @@ public class SemanticChecker implements ASTVisitor{
         TypeString = new ClassTypeNode("string",DefaultPosition);
         nowClass = null;
         nowFunc = null;
+        loops = 0;
         FuncSize = new FuncDefNode(new ClassTypeNode("int",DefaultPosition),"size",null,null,DefaultPosition);
     }
 
@@ -69,10 +71,26 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(FuncDefNode node) {
         cScope = new Scope(cScope); nowFunc = node;
-        if(!node.funcType.isEqual(TypeVoid) && !gScope.contains_Class(node.funcType.typeId)) throw new SemanticError("Undefined Function Return Type" + node.funcType.typeId,node.getPos());
-        node.parameterList.forEach(tmp->tmp.accept(this));
-        node.funcBody.accept(this);
+        if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !gScope.contains_Class(node.funcType.typeId)) throw new SemanticError("Undefined Function Return Type" + node.funcType.typeId,node.getPos());
+        if(node.parameterList != null) node.parameterList.forEach(tmp->tmp.accept(this));
+        int returnStmtNumber = 0;
+        for(StmtNode tmp : node.funcBody.stmtList){
+            tmp.accept(this);
+            if(tmp instanceof ReturnStmtNode) returnStmtNumber++;
+        }
+        if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !node.identifier.equals("main") && returnStmtNumber == 0) throw new SemanticError("Lack of Return Statement in " + node.identifier,node.getPos());
         cScope = cScope.parent; nowFunc = null;
+    }
+
+    @Override
+    public void visit(ReturnStmtNode node) {
+        if(nowFunc == null) throw new SemanticError("Return Statement must be in function",node.getPos());
+        if(node.returnVal == null){
+            if(nowFunc.funcType != null && nowFunc.funcType.isEqual(TypeVoid)) throw new SemanticError("Function Return Type Dismatched in " + nowFunc.identifier,node.getPos());
+        }else{
+            node.returnVal.accept(this);
+            if(nowFunc.funcType == null || !nowFunc.funcType.isEqual(node.returnVal.exprType)) throw new SemanticError("Function Return Type Dismatched in " + nowFunc.identifier,node.getPos());
+        }
     }
 
     @Override
@@ -85,11 +103,14 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(NewExprNode node) {
         if(!gScope.contains_Class(node.newType.typeId)) throw new SemanticError("Undefined Class Type",node.getPos());
-        node.SizeList.forEach(tmp->{
-            tmp.accept(this);
-            if(!tmp.exprType.isEqual(TypeInt)) throw new SemanticError("Array size should be int",node.getPos());
-        });
-        node.exprType = new ArrayTypeNode(node.newType.typeId,node.DimSize,node.getPos());
+        if(node.SizeList != null) {
+            node.SizeList.forEach(tmp -> {
+                tmp.accept(this);
+                if (!tmp.exprType.isEqual(TypeInt)) throw new SemanticError("Array size should be int", node.getPos());
+            });
+        }
+        if(node.DimSize > 0) node.exprType = new ArrayTypeNode(node.newType.typeId,node.DimSize,node.getPos());
+        else node.exprType = new ClassTypeNode(node.newType.typeId,node.getPos());
         node.isAssignable = false;
     }
 
@@ -124,7 +145,7 @@ public class SemanticChecker implements ASTVisitor{
             checkBase = gScope.fetch_Function(funcName);
             if(checkBase == null) throw new SemanticError("We don't have function named " + funcName,node.getPos());
         }
-        node.AryList.forEach(tmp->tmp.accept(this));
+        if(node.AryList != null) node.AryList.forEach(tmp->tmp.accept(this));
         if(checkBase.parameterList == null || node.AryList == null){
             if(!(checkBase.parameterList == null && node.AryList == null)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
         }else{
@@ -172,7 +193,7 @@ public class SemanticChecker implements ASTVisitor{
         node.isAssignable = false;
         switch(node.operator){
             case ADD,GT,LT,GE,LE -> {
-                if(!nodeType.isEqual(TypeInt) || !nodeType.isEqual(TypeString)) throw new SemanticError("This operator requires specific type.1",node.getPos());
+                if(!nodeType.isEqual(TypeInt) && !nodeType.isEqual(TypeString)) throw new SemanticError("This operator requires specific type.1",node.getPos());
             }
             case SUB,MUL,DIV,MOD,SHL,SHR,AND,XOR,OR -> {
                 if(!nodeType.isEqual(TypeInt)) throw new SemanticError("This operator requires specific type.2",node.getPos());
@@ -202,7 +223,58 @@ public class SemanticChecker implements ASTVisitor{
     public void visit(ExprStmtNode node) {node.expr.accept(this);}
 
     @Override
-    public void visit(BlockStmtNode node) {node.stmtList.forEach(tmp->tmp.accept(this));}
+    public void visit(BlockStmtNode node) {
+        cScope = new Scope(cScope);
+        node.stmtList.forEach(tmp->tmp.accept(this));
+        cScope = cScope.parent;
+    }
+
+    @Override
+    public void visit(BreakStmtNode node) {
+        if(loops == 0) throw new SemanticError("Break Statement should be in loop.",node.getPos());
+    }
+
+    @Override
+    public void visit(ContinueStmtNode node) {
+        if(loops == 0) throw new SemanticError("Break Statement should be in loop.",node.getPos());
+    }
+
+    @Override
+    public void visit(ForStmtNode node) {
+        cScope = new Scope(cScope);
+        loops++;
+        if(node.init != null) {
+            if (!(node.init instanceof ExprStmtNode) && !(node.init instanceof VarDefStmtNode)) throw new SemanticError("Statement Invalid in For Loop", node.getPos());
+            node.init.accept(this);
+        }
+        if(node.condition != null){
+            node.condition.accept(this);
+            if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in For loop Must be Boolean",node.getPos());
+        }
+        if(node.iteration != null) node.iteration.accept(this);
+        if(node.loopBody != null) node.loopBody.accept(this);
+        loops--;
+        cScope = cScope.parent;
+    }
+
+    @Override
+    public void visit(WhileStmtNode node) {
+        loops++;
+        if(node.condition == null) throw new SemanticError("Condition in While can't be null",node.getPos());
+        node.condition.accept(this);
+        if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in While Must be Boolean",node.getPos());
+        if(node.loopBody != null) node.loopBody.accept(this);
+        loops--;
+    }
+
+    @Override
+    public void visit(IfStmtNode node) {
+        if(node.condition == null) throw new SemanticError("Condition in IF can't be null ",node.getPos());
+        node.condition.accept(this);
+        if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in IF Must be Boolean",node.getPos());
+        node.thenCode.accept(this);
+        if(node.elseCode != null) node.elseCode.accept(this);
+    }
 
     @Override
     public void visit(ArrayTypeNode node) {
@@ -215,29 +287,10 @@ public class SemanticChecker implements ASTVisitor{
     }
 
     @Override
-    public void visit(BreakStmtNode Node) {
-
-    }
-
-    @Override
     public void visit(ClassTypeNode node) {
 
     }
 
-    @Override
-    public void visit(ContinueStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(ForStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(IfStmtNode node) {
-
-    }
 
     @Override
     public void visit(IntConstantExprNode node) {
@@ -246,11 +299,6 @@ public class SemanticChecker implements ASTVisitor{
 
     @Override
     public void visit(NullConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(ReturnStmtNode node) {
 
     }
 
@@ -264,8 +312,4 @@ public class SemanticChecker implements ASTVisitor{
 
     }
 
-    @Override
-    public void visit(WhileStmtNode node) {
-
-    }
 }

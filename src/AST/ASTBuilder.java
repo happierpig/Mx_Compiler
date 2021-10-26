@@ -92,6 +92,11 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
     }
 
     @Override
+    public ASTNode visitObjectPointer(MxParser.ObjectPointerContext ctx) {
+        return new ThisExprNode(new Position(ctx));
+    }
+
+    @Override
     public ASTNode visitAllocExp(MxParser.AllocExpContext ctx) {
         return visit(ctx.allocFormat());
     }

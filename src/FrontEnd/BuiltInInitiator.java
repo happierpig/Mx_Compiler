@@ -45,7 +45,7 @@ public class BuiltInInitiator{
         class_tmp.define_Function("parseInt",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"parseInt",null,null,new Position(-1,-1)));
         tmp_List = new ArrayList<>();
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"pos",null,new Position(-1,-1)));
-        class_tmp.define_Function("ord",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"ord",null,null,new Position(-1,-1)));
+        class_tmp.define_Function("ord",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"ord",tmp_List,null,new Position(-1,-1)));
         initScope.define_Class("string",class_tmp);
         return initScope;
     }

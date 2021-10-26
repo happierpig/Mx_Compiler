@@ -2,6 +2,7 @@ import AST.ASTBuilder;
 import AST.RootNode;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
+import FrontEnd.SemanticChecker;
 import Utils.GlobalScope;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -10,14 +11,14 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import Parser.MxParser;
 import Parser.MxLexer;
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 
 public class Main {
     public static void main(String[] args) throws Exception{
 
-        String name = "test.yx";
-        // create new input stream
-        InputStream input = new FileInputStream(name);
+//        String name = "test.yx";
+//        InputStream input = new FileInputStream(name);
+        InputStream input = System.in;
 
         try {
             // CharStreams is ANTLR's built-in string of 01;
@@ -41,7 +42,8 @@ public class Main {
             gScope = initialer.init(gScope);
             PreProcessor preprocess = new PreProcessor(gScope);
             preprocess.visit(rt);
-            int x = 1;
+            SemanticChecker semanticCheck = new SemanticChecker(gScope);
+            semanticCheck.visit(rt);
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
             throw new RuntimeException();
