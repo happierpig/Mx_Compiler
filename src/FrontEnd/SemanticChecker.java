@@ -141,8 +141,13 @@ public class SemanticChecker implements ASTVisitor{
             checkBase = ((ObjectMemberExprNode) (node.Func)).funcInfo;
         }else{
             String funcName = ((IdentifierExprNode) node.Func).identifier;
-            checkBase = gScope.fetch_Function(funcName);
-            if(checkBase == null) throw new SemanticError("We don't have function named " + funcName,node.getPos());
+            if(nowClass == null) {
+                checkBase = gScope.fetch_Function(funcName);
+            }else{
+                checkBase = gScope.Class_Table.get(nowClass).fetch_Function(funcName);
+                if(checkBase == null) checkBase = gScope.fetch_Function(funcName);
+            }
+            if (checkBase == null) throw new SemanticError("We don't have function named " + funcName, node.getPos());
         }
         if(node.AryList != null) node.AryList.forEach(tmp->tmp.accept(this));
         if(checkBase.parameterList == null || node.AryList == null){
