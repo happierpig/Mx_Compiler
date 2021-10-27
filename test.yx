@@ -1,61 +1,61 @@
 /*
 Test Package: Sema_Local_Preview
 Test Target: Misc
-Author: 15' Zhenjia Xu
-Time: 2019-10-20
+Author: 16' Jiuqin Zhou
+Time: 2019-11-11
 Verdict: Success
-Origin Package: Semantic Extended
+Origin Package: Semantic Pretest
 */
+int main(){
+    int i = 0;
 
-class ClassA{
-	int num;
-	string str;
-	bool[] bool_arr;
-	ClassA(){
-		str = "";
-		num = 1;
-		bool_arr = null;
-		bool_arr = new bool[100];
-		return;
-	}
-	ClassA getClassA(int x){
-		ClassA tmp = new ClassA;
-		tmp.num = x;
-		this.num = x;
-		return tmp;
-	}
-	string getString(){
-		return str;
-	}
-};
-int Main(int parameter){
-	ClassA a = new ClassA;
-	ClassA b = a.getClassA(parameter);
-	b.num = parameter;
-	parameter = getInt();
-	int[] int_arr = (new int[2][])[3];
-	int number = b.getString().parseInt() + getString().ord(123) % b.getString().substring(1, 3).length();
-	string str1 = "123";
-	string str2 = "456";
-	int num = 0;
-	if(str1 < str2) num++;
-	if(str1 <= str2) num++;
-	if(str1 > str2) num++;
-	if(str1 >= str2) num++;
-	if((str1 + str2) == (str1 + str2)){
-		num++;
-	}else if(false)
-			num--;
-			else --num;
-	for(;;){
-		break;
-	}
-	while(true)
-		continue;
-	println(str1);
-	print(str2);
-	return num;
-}
-int main() {
-    Main(0);
+    // test forStmt block
+    for(i = 0; i < 10; ++i){
+        string i = "";
+        print(i + "\n");
+    }
+    for(i = 0; i < 10; ++i)
+        int i = 0;
+    for(i = 0; i < 10; ++i)
+        for(i = 0; i < 10; ++i)
+            int i = 0;
+    {
+        int i = 0;
+    }
+
+    // test ifStmt block
+    if(i == 0){
+        string i = "";
+        println(i + i);
+    }
+    else{
+        string i = "-1";
+        println(i + i + getString());
+    }
+    if(i == 0)
+        int i = 0;
+    else if( i == 0)
+            if( i == 0)
+                int i = 0;
+    else
+        int i = 0;
+    {
+        int i = 0;
+    }
+
+    // test WhileStmt block
+    while(toString(i) == "0"){
+        string i = "11h";
+        int i_ = i.parseInt();
+    }
+    while(i == 0)
+        int i = 0;
+    while(i == 0)
+        while(i == 0)
+            int i = 0;
+    {
+        int i = 0;
+    }
+
+    return 0;
 }

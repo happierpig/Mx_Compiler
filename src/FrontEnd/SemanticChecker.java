@@ -306,7 +306,11 @@ public class SemanticChecker implements ASTVisitor{
         if(node.condition == null) throw new SemanticError("Condition in While can't be null",node.getPos());
         node.condition.accept(this);
         if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in While Must be Boolean",node.getPos());
-        if(node.loopBody != null) node.loopBody.accept(this);
+        if(node.loopBody != null){
+            cScope = new Scope(cScope);
+            node.loopBody.accept(this);
+            cScope = cScope.parent;
+        }
         loops--;
     }
 
@@ -315,8 +319,14 @@ public class SemanticChecker implements ASTVisitor{
         if(node.condition == null) throw new SemanticError("Condition in IF can't be null ",node.getPos());
         node.condition.accept(this);
         if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in IF Must be Boolean",node.getPos());
+        cScope = new Scope(cScope);
         node.thenCode.accept(this);
-        if(node.elseCode != null) node.elseCode.accept(this);
+        cScope = cScope.parent;
+        if(node.elseCode != null){
+            cScope = new Scope(cScope);
+            node.elseCode.accept(this);
+            cScope = cScope.parent;
+        }
     }
 
     @Override
