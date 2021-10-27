@@ -76,7 +76,7 @@ public class SemanticChecker implements ASTVisitor{
         FuncStation.push(node);
         if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !gScope.contains_Class(node.funcType.typeId)) throw new SemanticError("Undefined Function Return Type" + node.funcType.typeId,node.getPos());
         if(node.parameterList != null) node.parameterList.forEach(tmp->tmp.accept(this));
-        node.funcBody.stmtList.forEach(tmp->tmp.accept(this));
+        if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(tmp->tmp.accept(this));
         if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !node.identifier.equals("main") && !node.hasReturn) throw new SemanticError("Lack of Return Statement in " + node.identifier,node.getPos());
         FuncStation.pop();
         cScope = cScope.parent;
