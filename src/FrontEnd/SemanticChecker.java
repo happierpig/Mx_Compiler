@@ -3,7 +3,6 @@ package FrontEnd;
 import AST.*;
 import Utils.*;
 
-import java.lang.reflect.Type;
 
 public class SemanticChecker implements ASTVisitor{
     public Scope cScope;
@@ -172,7 +171,7 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(MonoExprNode node) {
         node.operand.accept(this);
-        if(!node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
+        if(node.operator != MonoExprNode.Op.NEG && node.operator != MonoExprNode.Op.POS && !node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
         switch(node.operator){
             case PREINC,PREDEC,NEG,POS,AFTINC,AFTDEC,BITNOT->{
                 if(!node.operand.exprType.isEqual(TypeInt)) throw new SemanticError("Operand should be int",node.getPos());
