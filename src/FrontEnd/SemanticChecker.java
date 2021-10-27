@@ -107,7 +107,8 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(ReturnStmtNode node) {
         if(FuncStation.empty()) throw new SemanticError("Return Statement must be in Function or Lambda",node.getPos());
-        if(FuncStation.peek() instanceof FuncDefNode nowFunc) {
+        if(FuncStation.peek() instanceof FuncDefNode) {
+            FuncDefNode nowFunc = (FuncDefNode) FuncStation.peek();
             if (node.returnVal == null) {
                 if (nowFunc.funcType != null && !nowFunc.funcType.isEqual(TypeVoid)) throw new SemanticError("Function Return Type Dismatched1 in " + nowFunc.identifier, node.getPos());
             } else {
