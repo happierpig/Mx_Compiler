@@ -3,6 +3,7 @@ package FrontEnd;
 import AST.*;
 import Utils.*;
 
+import java.lang.reflect.Type;
 import java.util.Stack;
 
 
@@ -209,7 +210,7 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(MonoExprNode node) {
         node.operand.accept(this);
-        if(node.operator != MonoExprNode.Op.NEG && node.operator != MonoExprNode.Op.POS && node.operator != MonoExprNode.Op.LNOT  && !node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
+        if(node.operator != MonoExprNode.Op.NEG && node.operator != MonoExprNode.Op.POS && node.operator != MonoExprNode.Op.BITNOT && node.operator != MonoExprNode.Op.LNOT  && !node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
         switch(node.operator){
             case PREINC,PREDEC,NEG,POS,AFTINC,AFTDEC,BITNOT->{
                 if(!node.operand.exprType.isEqual(TypeInt)) throw new SemanticError("Operand should be int",node.getPos());
@@ -240,7 +241,10 @@ public class SemanticChecker implements ASTVisitor{
             }
             case ASSIGN -> {
                 if(!node.LOperand.isAssignable) throw new SemanticError("Left value is required",node.getPos());
-                if(!node.LOperand.exprType.isEqual(node.ROperand.exprType) && !node.ROperand.exprType.isEqual(TypeNull)) throw new SemanticError("Type Dismatched in Binary Operation2",node.getPos());
+                if(!nodeType.isEqual(node.ROperand.exprType) && !node.ROperand.exprType.isEqual(TypeNull)) throw new SemanticError("Type Dismatched in Binary Operation2",node.getPos());
+                if(node.ROperand.exprType.isEqual(TypeNull)){
+                    if(nodeType.isEqual(TypeInt) || nodeType.isEqual(TypeBool) || nodeType.isEqual(TypeString)) throw new SemanticError("Null cannot be assigned to primitive type variable",node.getPos());
+                }
                 node.isAssignable = true;
             }
             case EQ,NE -> {
@@ -321,7 +325,7 @@ public class SemanticChecker implements ASTVisitor{
         node.condition.accept(this);
         if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in IF Must be Boolean",node.getPos());
         cScope = new Scope(cScope);
-        node.thenCode.accept(this);
+        if(node.thenCode != null) node.thenCode.accept(this);
         cScope = cScope.parent;
         if(node.elseCode != null){
             cScope = new Scope(cScope);

@@ -16,6 +16,7 @@ public class PreProcessor implements ASTVisitor{
     public void visit(RootNode node) {
         node.elements.forEach(tmp->tmp.accept(this));
         if(!this.gScope.contains_Function("main") || !this.gScope.fetch_Function("main").funcType.isEqual(new ClassTypeNode("int",new Position(-1,-1)))) throw new SemanticError("Where is main function ?",node.getPos());
+        if(this.gScope.fetch_Function("main").parameterList != null) throw new SemanticError("Main function should not have parameters.",node.getPos());
     }
 
     @Override
