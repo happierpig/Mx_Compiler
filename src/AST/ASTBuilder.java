@@ -4,6 +4,7 @@ import Parser.MxBaseVisitor;
 import Parser.MxParser;
 import Utils.Position;
 import Utils.SyntaxError;
+import org.antlr.v4.codegen.model.chunk.TokenPropertyRef_line;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -176,15 +177,39 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode>{
         return new BinaryExprNode(tmpOp,new Position(ctx),ls,rs);
     }
 
+    @Override
+    public ASTNode visitLambdaExp(MxParser.LambdaExpContext ctx) {
+        ArrayList<VarDefNode> _parameter = null;
+        if(ctx.lambdaParameterList() != null && ctx.lambdaParameterList().parameterList() != null){
+            _parameter = new ArrayList<>();
+            List<MxParser.VariableTypeContext> vtl = ctx.lambdaParameterList().parameterList().variableType();
+            List<TerminalNode> vil = ctx.lambdaParameterList().parameterList().IDENTIFIER();
+            for(int i = 0;i < vtl.size();i++){
+                _parameter.add(new VarDefNode((TypeNode) visit(vtl.get(i)),vil.get(i).getText(),null,new Position(vtl.get(i))));
+            }
+        }
+        ArrayList<ExprNode> _List = null;
+        if(ctx.parameterListForCall() != null){
+            _List = new ArrayList<>();
+            for(MxParser.ExpressionContext ele :ctx.parameterListForCall().expression()) _List.add((ExprNode) visit(ele));
+        }
+        return new LambdaExprNode(_parameter,_List,(BlockStmtNode) visit(ctx.block()),new Position(ctx));
+    }
+
     //statement node
 
     @Override
     public ASTNode visitBlock(MxParser.BlockContext ctx) {
-        ArrayList<StmtNode> _List = new ArrayList<>();
+        ArrayList<StmtNode> _List = null;
         if(ctx.statement() != null){
-            ctx.statement().forEach(tmp->_List.add((StmtNode) visit(tmp)));
-            return new BlockStmtNode(_List,new Position(ctx));
-        }else return new BlockStmtNode(null,new Position(ctx));
+            for(MxParser.StatementContext ele : ctx.statement()){
+                if(!(ele instanceof MxParser.BlankStmtContext)){
+                    if(_List == null) _List = new ArrayList<>();
+                    _List.add((StmtNode) visit(ele));
+                }
+            }
+        }
+        return new BlockStmtNode(_List,new Position(ctx));
     }
 
     @Override

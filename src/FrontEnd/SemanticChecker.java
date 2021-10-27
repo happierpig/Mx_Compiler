@@ -3,13 +3,16 @@ package FrontEnd;
 import AST.*;
 import Utils.*;
 
+import java.util.Stack;
+
 
 public class SemanticChecker implements ASTVisitor{
     public Scope cScope;
     public GlobalScope gScope;
     private final TypeNode TypeNull,TypeVoid,TypeInt,TypeBool,TypeString;
     private String nowClass;
-    public FuncDefNode FuncSize,nowFunc;
+    public FuncDefNode FuncSize;
+    public Stack<ASTNode> FuncStation;
     private final Position DefaultPosition;
     public int loops;
     public SemanticChecker(GlobalScope _gScope){
@@ -22,7 +25,7 @@ public class SemanticChecker implements ASTVisitor{
         TypeBool = new ClassTypeNode("bool",DefaultPosition);
         TypeString = new ClassTypeNode("string",DefaultPosition);
         nowClass = null;
-        nowFunc = null;
+        FuncStation = new Stack<>();
         loops = 0;
         FuncSize = new FuncDefNode(new ClassTypeNode("int",DefaultPosition),"size",null,null,DefaultPosition);
     }
@@ -69,26 +72,55 @@ public class SemanticChecker implements ASTVisitor{
 
     @Override
     public void visit(FuncDefNode node) {
-        cScope = new Scope(cScope); nowFunc = node;
+        cScope = new Scope(cScope);
+        FuncStation.push(node);
         if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !gScope.contains_Class(node.funcType.typeId)) throw new SemanticError("Undefined Function Return Type" + node.funcType.typeId,node.getPos());
         if(node.parameterList != null) node.parameterList.forEach(tmp->tmp.accept(this));
-        int returnStmtNumber = 0;
-        for(StmtNode tmp : node.funcBody.stmtList){
-            tmp.accept(this);
-            if(tmp instanceof ReturnStmtNode) returnStmtNumber++;
+        node.funcBody.stmtList.forEach(tmp->tmp.accept(this));
+        if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !node.identifier.equals("main") && !node.hasReturn) throw new SemanticError("Lack of Return Statement in " + node.identifier,node.getPos());
+        FuncStation.pop();
+        cScope = cScope.parent;
+    }
+
+    @Override
+    public void visit(LambdaExprNode node) {
+        cScope = new Scope(cScope);
+        FuncStation.push(node);
+        if(node.parameterList != null) node.parameterList.forEach(tmp->tmp.accept(this));
+        if(node.AryList != null) node.AryList.forEach(tmp->tmp.accept(this));
+        if(node.parameterList == null || node.AryList == null){
+            if(!(node.parameterList == null && node.AryList == null)) throw new SemanticError("Wrong parameter in Lambda ",node.getPos());
+        }else{
+            if(node.parameterList.size() != node.AryList.size()) throw new SemanticError("Wrong parameter in Lambda ",node.getPos());
+            for (int i = 0; i < node.parameterList.size(); i++) {
+                if(!node.parameterList.get(i).varType.isEqual(node.AryList.get(i).exprType)) throw new SemanticError("Wrong parameter in Lambda ",node.getPos());
+            }
         }
-        if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !node.identifier.equals("main") && returnStmtNumber == 0) throw new SemanticError("Lack of Return Statement in " + node.identifier,node.getPos());
-        cScope = cScope.parent; nowFunc = null;
+        node.funcBody.stmtList.forEach(tmp->tmp.accept(this));
+        if(node.ReturnType == null) throw new SemanticError("Lambda Expression has at least one Return Statement",node.getPos());
+        node.exprType = node.ReturnType;;
+        node.isAssignable = false;
+        FuncStation.pop();
+        cScope = cScope.parent;
     }
 
     @Override
     public void visit(ReturnStmtNode node) {
-        if(nowFunc == null) throw new SemanticError("Return Statement must be in function",node.getPos());
-        if(node.returnVal == null){
-            if(nowFunc.funcType != null && nowFunc.funcType.isEqual(TypeVoid)) throw new SemanticError("Function Return Type Dismatched in " + nowFunc.identifier,node.getPos());
+        if(FuncStation.empty()) throw new SemanticError("Return Statement must be in Function or Lambda",node.getPos());
+        if(FuncStation.peek() instanceof FuncDefNode nowFunc) {
+            if (node.returnVal == null) {
+                if (nowFunc.funcType != null && !nowFunc.funcType.isEqual(TypeVoid)) throw new SemanticError("Function Return Type Dismatched1 in " + nowFunc.identifier, node.getPos());
+            } else {
+                node.returnVal.accept(this);
+                if (nowFunc.funcType == null || (!nowFunc.funcType.isEqual(node.returnVal.exprType) && !node.returnVal.exprType.isEqual(TypeNull))) throw new SemanticError("Function Return Type Dismatched2 in " + nowFunc.identifier, node.getPos());
+            }
+            nowFunc.hasReturn = true;
         }else{
+            LambdaExprNode nowFunc = (LambdaExprNode) FuncStation.peek();
+            if(node.returnVal == null) throw new SemanticError("Lambda Expression need return type",node.getPos());
             node.returnVal.accept(this);
-            if(nowFunc.funcType == null || !nowFunc.funcType.isEqual(node.returnVal.exprType)) throw new SemanticError("Function Return Type Dismatched in " + nowFunc.identifier,node.getPos());
+            if(nowFunc.ReturnType == null) nowFunc.ReturnType = node.returnVal.exprType;
+            else if(!nowFunc.ReturnType.isEqual(node.returnVal.exprType)) throw new SemanticError("Lambda Expression has only one return type",node.getPos());
         }
     }
 
@@ -151,11 +183,11 @@ public class SemanticChecker implements ASTVisitor{
         }
         if(node.AryList != null) node.AryList.forEach(tmp->tmp.accept(this));
         if(checkBase.parameterList == null || node.AryList == null){
-            if(!(checkBase.parameterList == null && node.AryList == null)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+            if(!(checkBase.parameterList == null && node.AryList == null)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,node.getPos());
         }else{
-            if(checkBase.parameterList.size() != node.AryList.size()) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+            if(checkBase.parameterList.size() != node.AryList.size()) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,node.getPos());
             for (int i = 0; i < checkBase.parameterList.size(); i++) {
-                if(!checkBase.parameterList.get(i).varType.isEqual(node.AryList.get(i).exprType)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,checkBase.getPos());
+                if(!checkBase.parameterList.get(i).varType.isEqual(node.AryList.get(i).exprType) && !node.AryList.get(i).exprType.isEqual(TypeNull)) throw new SemanticError("Wrong parameter in function call "+ checkBase.identifier,node.getPos());
             }
         }
         node.exprType = checkBase.funcType;
@@ -176,7 +208,7 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(MonoExprNode node) {
         node.operand.accept(this);
-        if(node.operator != MonoExprNode.Op.NEG && node.operator != MonoExprNode.Op.POS && !node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
+        if(node.operator != MonoExprNode.Op.NEG && node.operator != MonoExprNode.Op.POS && node.operator != MonoExprNode.Op.LNOT  && !node.operand.isAssignable) throw new SemanticError("Right Value can't operate",node.getPos());
         switch(node.operator){
             case PREINC,PREDEC,NEG,POS,AFTINC,AFTDEC,BITNOT->{
                 if(!node.operand.exprType.isEqual(TypeInt)) throw new SemanticError("Operand should be int",node.getPos());
@@ -192,7 +224,7 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(BinaryExprNode node) {
         node.LOperand.accept(this); node.ROperand.accept(this);
-        if(!node.LOperand.exprType.isEqual(node.ROperand.exprType)) throw new SemanticError("Type Dismatched in Binary Operation",node.getPos());
+        if(!node.LOperand.exprType.isEqual(node.ROperand.exprType) && node.operator != BinaryExprNode.Op.ASSIGN && node.operator != BinaryExprNode.Op.EQ && node.operator != BinaryExprNode.Op.NE) throw new SemanticError("Type Dismatched in Binary Operation1",node.getPos());
         TypeNode nodeType = node.LOperand.exprType;
         node.isAssignable = false;
         switch(node.operator){
@@ -207,7 +239,11 @@ public class SemanticChecker implements ASTVisitor{
             }
             case ASSIGN -> {
                 if(!node.LOperand.isAssignable) throw new SemanticError("Left value is required",node.getPos());
+                if(!node.LOperand.exprType.isEqual(node.ROperand.exprType) && !node.ROperand.exprType.isEqual(TypeNull)) throw new SemanticError("Type Dismatched in Binary Operation2",node.getPos());
                 node.isAssignable = true;
+            }
+            case EQ,NE -> {
+                if(!node.LOperand.exprType.isEqual(node.ROperand.exprType) && !node.ROperand.exprType.isEqual(TypeNull)) throw new SemanticError("Type Dismatched in Binary Operation3",node.getPos());
             }
         }
         switch (node.operator){
@@ -229,7 +265,7 @@ public class SemanticChecker implements ASTVisitor{
     @Override
     public void visit(BlockStmtNode node) {
         cScope = new Scope(cScope);
-        node.stmtList.forEach(tmp->tmp.accept(this));
+        if(node.stmtList != null) node.stmtList.forEach(tmp->tmp.accept(this));
         cScope = cScope.parent;
     }
 
@@ -256,7 +292,10 @@ public class SemanticChecker implements ASTVisitor{
             if(!node.condition.exprType.isEqual(TypeBool)) throw new SemanticError("Condition in For loop Must be Boolean",node.getPos());
         }
         if(node.iteration != null) node.iteration.accept(this);
-        if(node.loopBody != null) node.loopBody.accept(this);
+        if(node.loopBody != null){
+            if(node.loopBody instanceof BlockStmtNode) ((BlockStmtNode) node.loopBody).stmtList.forEach(tmp->tmp.accept(this));
+            else node.loopBody.accept(this);
+        }
         loops--;
         cScope = cScope.parent;
     }

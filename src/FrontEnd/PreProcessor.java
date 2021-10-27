@@ -70,4 +70,5 @@ public class PreProcessor implements ASTVisitor{
     @Override public void visit(VarDefNode node) {}
     @Override public void visit(VoidTypeNode node) {}
     @Override public void visit(WhileStmtNode node) {}
+    @Override public void visit(LambdaExprNode node) {}
 }

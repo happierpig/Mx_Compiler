@@ -6,6 +6,7 @@ public class NullConstantExprNode extends ExprNode{
     public NullConstantExprNode(Position _pos){
         super(_pos);
         this.exprType = new ClassTypeNode("null",_pos);
+        this.isAssignable = false;
     }
 
     @Override

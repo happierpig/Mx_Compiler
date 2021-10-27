@@ -57,4 +57,6 @@ public interface ASTVisitor{
     void visit(VoidTypeNode node);
 
     void visit(WhileStmtNode node);
+
+    void visit(LambdaExprNode node);
 }
