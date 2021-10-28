@@ -2,8 +2,6 @@ package FrontEnd;
 
 import AST.*;
 import Utils.*;
-
-import java.lang.reflect.Type;
 import java.util.Stack;
 
 
@@ -14,21 +12,20 @@ public class SemanticChecker implements ASTVisitor{
     private String nowClass;
     public FuncDefNode FuncSize;
     public Stack<ASTNode> FuncStation;
-    private final Position DefaultPosition;
     public int loops;
     public SemanticChecker(GlobalScope _gScope){
         this.gScope = _gScope;
         this.cScope = this.gScope;
-        DefaultPosition = new Position(-1,-1);
-        TypeNull = new ClassTypeNode("null",DefaultPosition);
-        TypeVoid = new VoidTypeNode(DefaultPosition);
-        TypeInt = new ClassTypeNode("int",DefaultPosition);
-        TypeBool = new ClassTypeNode("bool",DefaultPosition);
-        TypeString = new ClassTypeNode("string",DefaultPosition);
+        Position defaultPosition = new Position(-1, -1);
+        TypeNull = new ClassTypeNode("null", defaultPosition);
+        TypeVoid = new VoidTypeNode(defaultPosition);
+        TypeInt = new ClassTypeNode("int", defaultPosition);
+        TypeBool = new ClassTypeNode("bool", defaultPosition);
+        TypeString = new ClassTypeNode("string", defaultPosition);
         nowClass = null;
         FuncStation = new Stack<>();
         loops = 0;
-        FuncSize = new FuncDefNode(new ClassTypeNode("int",DefaultPosition),"size",null,null,DefaultPosition);
+        FuncSize = new FuncDefNode(new ClassTypeNode("int", defaultPosition),"size",null,null, defaultPosition);
     }
 
 
@@ -334,40 +331,12 @@ public class SemanticChecker implements ASTVisitor{
         }
     }
 
-    @Override
-    public void visit(ArrayTypeNode node) {
-
-    }
-
-    @Override
-    public void visit(BoolConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(ClassTypeNode node) {
-
-    }
-
-
-    @Override
-    public void visit(IntConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(NullConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(StringConstantExprNode node) {
-
-    }
-
-    @Override
-    public void visit(VoidTypeNode node) {
-
-    }
+    @Override public void visit(ArrayTypeNode node) {}
+    @Override public void visit(BoolConstantExprNode node) {}
+    @Override public void visit(ClassTypeNode node) {}
+    @Override public void visit(IntConstantExprNode node) {}
+    @Override public void visit(NullConstantExprNode node) {}
+    @Override public void visit(StringConstantExprNode node) {}
+    @Override public void visit(VoidTypeNode node) {}
 
 }
