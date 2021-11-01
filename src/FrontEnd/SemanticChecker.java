@@ -258,7 +258,7 @@ public class SemanticChecker implements ASTVisitor{
     public void visit(ThisExprNode node) {
         if(nowClass == null) throw new SemanticError("Pointer this can only be used in Class Definition.",node.getPos());
         node.exprType = new ClassTypeNode(nowClass,node.getPos());
-        node.isAssignable = true;
+        node.isAssignable = false;
     }
 
     @Override
