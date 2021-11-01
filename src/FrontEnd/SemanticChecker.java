@@ -54,7 +54,8 @@ public class SemanticChecker implements ASTVisitor{
 
     @Override
     public void visit(ClassDefNode node) {
-        cScope = gScope.Class_Table.get(node.classIdentifier); nowClass = node.classIdentifier;
+        cScope = gScope.Class_Table.get(node.classIdentifier);
+        nowClass = node.classIdentifier;
         for(VarDefStmtNode _list : node.memberVariable){
             for(VarDefNode _tmp : _list.elements){
                 if(!gScope.contains_Class(_tmp.varType.typeId)) throw new SemanticError("Undefined Class " + _tmp.varType.typeId,_tmp.getPos());
@@ -65,7 +66,8 @@ public class SemanticChecker implements ASTVisitor{
             }
         }
         node.memberFunction.forEach(tmp->tmp.accept(this));
-        cScope = cScope.parent; nowClass = null;
+        nowClass = null;
+        cScope = cScope.parent;
     }
 
     @Override

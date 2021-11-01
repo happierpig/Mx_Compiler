@@ -31,6 +31,7 @@ public class PreProcessor implements ASTVisitor{
                 });
             }
             node.memberFunction.forEach(func->{
+                if(func.funcType != null && func.identifier.equals(node.classIdentifier)) throw new SemanticError("Invalid Constructor in Class " + node.classIdentifier,func.getPos());
                 if(func.funcType == null && !func.identifier.equals(node.classIdentifier)) throw new SemanticError("Invalid Constructor in Class " + node.classIdentifier,func.getPos());
                 else if(forClass.contains_Function(func.identifier)) throw new SemanticError("Duplicate Declaration Function " + func.identifier + "in Class " + node.classIdentifier,func.getPos());
                 else forClass.define_Function(func.identifier,func);
