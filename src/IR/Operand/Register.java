@@ -17,6 +17,7 @@ public class Register extends IROperand{
         return this.type.toString() + " %" + this.name;
     }
 
+    @Override
     public String getName(){
         return "%" + this.name;
     }

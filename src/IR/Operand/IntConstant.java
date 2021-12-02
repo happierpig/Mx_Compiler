@@ -13,4 +13,9 @@ public class IntConstant extends IROperand{
     public String toString() {
         return this.type.toString() + " " + this.value;
     }
+
+    @Override
+    public String getName() {
+        throw new RuntimeException("[Debug] get int constant name");
+    }
 }
