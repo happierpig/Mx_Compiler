@@ -35,15 +35,22 @@ public class Main {
             // start parsing according to the program rule
             ParseTree parseTreeRoot = parser.program();
 
+            // AST
             ASTBuilder test = new ASTBuilder();
             RootNode rt = (RootNode) test.visit(parseTreeRoot);
+
+            // Preprocess && Built-in set
             GlobalScope gScope = new GlobalScope(null);
             BuiltInInitiator initialer = new BuiltInInitiator();
             gScope = initialer.init(gScope);
             PreProcessor preprocess = new PreProcessor(gScope);
             preprocess.visit(rt);
+
+            // Semantic Checker
             SemanticChecker semanticCheck = new SemanticChecker(gScope);
             semanticCheck.visit(rt);
+
+
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
             throw new RuntimeException();

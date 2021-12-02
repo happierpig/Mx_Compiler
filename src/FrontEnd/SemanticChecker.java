@@ -28,7 +28,6 @@ public class SemanticChecker implements ASTVisitor{
         FuncSize = new FuncDefNode(new ClassTypeNode("int", defaultPosition),"size",null,null, defaultPosition);
     }
 
-
     @Override
     public void visit(RootNode node) {
         node.elements.forEach(tmp->tmp.accept(this));

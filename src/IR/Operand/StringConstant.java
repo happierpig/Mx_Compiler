@@ -11,7 +11,7 @@ public class StringConstant extends IROperand{
     public StringConstant(String _msg,String _name){
         this.message = reload(_msg);
         this.type = new Pointer(new Array(new Integer(8),this.message.length()));
-        this.name = "_str_" + _name;
+        this.name = _name;
     }
 
     private String reload(String origin){
@@ -25,11 +25,11 @@ public class StringConstant extends IROperand{
 
     @Override
     public String getName(){
-        return "@" + this.name;
+        return "_str_" + this.name;
     }
 
     @Override
     public String toString() {
-        return "@" + this.name + " = private unnamed_addr constant " + ((Pointer)this.type).baseType.toString() + "c\"" + this.message + "\"";
+        return "@" + this.getName() + " = private unnamed_addr constant " + ((Pointer)this.type).baseType.toString() + "c\"" + this.message + "\"";
     }
 }
