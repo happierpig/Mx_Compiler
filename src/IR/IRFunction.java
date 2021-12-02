@@ -14,8 +14,8 @@ public class IRFunction{
 
     public IRFunction(String _name){
         this.funcName = "_func_" + _name;
-        parameters = new LinkedList<>();
-        blocks = new LinkedList<>();
+        this.parameters = new LinkedList<>();
+        this.blocks = new LinkedList<>();
     }
 
     public String getName(){
@@ -24,9 +24,9 @@ public class IRFunction{
 
     public String toString(){
         StringBuilder raw = new StringBuilder();
-        raw.append("define ").append(returnType.toString()).append(" @").append(this.funcName).append('(');
+        raw.append("define ").append(returnType.toString()).append(" @").append(this.getName()).append('(');
         if(parameters.size() != 0){
-            parameters.forEach(tmp->raw.append(tmp.type.toString()).append(' ').append(tmp.getName()).append(", "));
+            parameters.forEach(tmp->raw.append(tmp.toString()).append(", "));
             raw.delete(raw.length()-2,raw.length());
         }
         raw.append(")\t{\n");

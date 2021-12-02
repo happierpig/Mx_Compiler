@@ -8,7 +8,7 @@ public class Register extends IROperand{
 
     public Register(IRType _type){
         super(_type);
-        this.name = "_temp" + Register.globalCount;
+        this.name = "T" + Register.globalCount;
         Register.globalCount++;
     }
 
