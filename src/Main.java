@@ -3,6 +3,8 @@ import AST.RootNode;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
+import IR.IRModule;
+import IR.Infrastructure.IRBuilder;
 import Utils.GlobalScope;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -50,6 +52,11 @@ public class Main {
             SemanticChecker semanticCheck = new SemanticChecker(gScope);
             semanticCheck.visit(rt);
 
+            // IR builder
+            IRModule module = new IRModule();
+            IRBuilder irb = new IRBuilder(gScope,module);
+            irb.visit(rt);
+            System.out.println(module.toLLVM());
 
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());

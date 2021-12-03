@@ -1,6 +1,4 @@
-class A{
-    int A(){
-        return 1;
-    }
-};
-int main(){}
+int main(){
+    string x = "Hello World!";
+    return 0;
+}

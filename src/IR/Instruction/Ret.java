@@ -11,6 +11,6 @@ public class Ret extends IRInstruction{
 
     @Override
     public String toString() {
-        return "ret " + this.returnVal.toString();
+        return "ret " + (returnVal == null ? "void" : this.returnVal.toString());
     }
 }

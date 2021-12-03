@@ -2,7 +2,7 @@ package IR.Operand;
 
 import IR.TypeSystem.Integer;
 
-public class IntConstant extends IROperand{
+public class IntConstant extends IRConstant{
     public int value;
     public IntConstant(int _value){
         super(new Integer(32));

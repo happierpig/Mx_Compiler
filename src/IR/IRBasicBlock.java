@@ -19,8 +19,9 @@ public class IRBasicBlock{
         suc = new HashSet<>();
     }
 
-    public void addInstruction(IRInstruction _instr){
+    public IRBasicBlock addInstruction(IRInstruction _instr){
         instructions.add(_instr);
+        return this;
     }
 
     public void addPrev(IRBasicBlock _pred){
@@ -37,7 +38,7 @@ public class IRBasicBlock{
 
     public String toString(){
         StringBuilder raw = new StringBuilder();
-        raw.append(this.blockName); raw.append(" :");
+        raw.append(this.blockName); raw.append(":");
         // pred
         if(this.pred.size() != 0){
             raw.append("\t\t\t\t\t ;preds = ");

@@ -7,6 +7,11 @@ public class GlobalVariable extends IROperand{
     public String name;
     public IRType type;
 
+    public GlobalVariable(String _name){
+        this.name = _name;
+        this.type = null;
+    }
+
     public GlobalVariable(String _name,IRType _type){
         this.name = _name;
         this.type = new Pointer(_type);
@@ -20,5 +25,9 @@ public class GlobalVariable extends IROperand{
     @Override
     public String getName() {
         return "@_glo_" + this.name;
+    }
+
+    public void setType(IRType _type){
+        this.type = _type;
     }
 }

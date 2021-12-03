@@ -11,15 +11,16 @@ public class IRFunction{
     public IRBasicBlock exitBlock;
     public LinkedList<Register> parameters;
     public LinkedList<IRBasicBlock> blocks;
+    public Register returnAddress;
 
     public IRFunction(String _name){
-        this.funcName = "_func_" + _name;
+        this.funcName = _name;
         this.parameters = new LinkedList<>();
         this.blocks = new LinkedList<>();
     }
 
     public String getName(){
-        return this.funcName;
+        return this.funcName.equals("main") ? this.funcName : "_func_" + this.funcName;
     }
 
     public String toString(){
@@ -30,7 +31,9 @@ public class IRFunction{
             raw.delete(raw.length()-2,raw.length());
         }
         raw.append(")\t{\n");
+        raw.append(entryBlock.toString());
         blocks.forEach(tmp->raw.append(tmp.toString()));
+        raw.append(exitBlock.toString());
         raw.append("}\n");
         return raw.toString();
     }
