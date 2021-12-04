@@ -1,4 +1,0 @@
-int main(){
-    string x = "Hello World!";
-    return 0;
-}

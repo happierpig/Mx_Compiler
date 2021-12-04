@@ -1,8 +1,13 @@
 package IR.Infrastructure;
 
 import AST.*;
+import Utils.GlobalScope;
 
 public class IRBuilder implements ASTVisitor {
+    public GlobalScope gScope;
+    public IRScope cScope;
+
+
     @Override
     public void visit(ArrayAccessExprNode node) {
 

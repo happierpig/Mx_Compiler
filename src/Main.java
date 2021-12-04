@@ -54,9 +54,7 @@ public class Main {
 
             // IR builder
             IRModule module = new IRModule();
-            IRBuilder irb = new IRBuilder(gScope,module);
-            irb.visit(rt);
-            System.out.println(module.toLLVM());
+
 
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
