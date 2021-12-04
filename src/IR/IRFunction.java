@@ -29,13 +29,13 @@ public class IRFunction extends User{
 
     @Override
     public String getName() {
-        return "@ " + this.name;
+        return "@" + this.name;
     }
 
     @Override
     public String toString() {
         StringBuilder raw = new StringBuilder();
-        raw.append("define ").append(this.type.toString()).append(" @").append(this.getName()).append('(');
+        raw.append("define ").append(this.type.toString()).append(' ').append(this.getName()).append('(');
         if(this.operands.size() != 0){
             this.operands.forEach(tmp->raw.append(tmp.getTypeName()).append(", "));
             raw.delete(raw.length()-2,raw.length());

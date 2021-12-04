@@ -6,13 +6,13 @@ import IR.TypeSystem.PointerType;
 
 public class GlobalDef extends IRInstruction{
 
-    public GlobalDef(String _name, IRType _type, IRBasicBlock _block) {
-        super(_name+"_glo", new PointerType(_type), _block);
+    public GlobalDef(String _name, IRType _type) {
+        super(_name+"_glo", new PointerType(_type), null);
     }
 
     @Override
     public String getName() {
-        return "@ " + this.name;
+        return "@" + this.name;
     }
 
     // toString for instruction is to print llvm

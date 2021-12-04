@@ -20,6 +20,6 @@ public class StringConstant extends IRConstant{
 
     @Override
     public String toString() {
-        return this.getName() + " = private unnamed_addr constant " + ((PointerType)this.type).baseType.toString() + " c\"" + this.value + "\"";
+        return this.getName() + " = private unnamed_addr constant " + ((PointerType)this.type).baseType.toString() + " c\"" + this.value + "\", align 1";
     }
 }

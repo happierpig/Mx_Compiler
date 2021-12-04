@@ -20,13 +20,12 @@ public class Value{
     public String name;
     public IRType type;
     public ArrayList<User> useList;
-    public static HashMap<String, Integer> renamingMachine;
+    public static HashMap<String, Integer> renamingMachine = new HashMap<>();
 
     public Value(String _name,IRType _type){
         this.name = renaming(_name);
         this.type = _type;
         this.useList = new ArrayList<>();
-        renamingMachine = new HashMap<>();
     }
 
     public String renaming(String _name){
@@ -50,7 +49,7 @@ public class Value{
     }
 
     public String getName(){
-        return "% " + this.name;
+        return "%" + this.name;
     }
 
     public String getTypeName(){

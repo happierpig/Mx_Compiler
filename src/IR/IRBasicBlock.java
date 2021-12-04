@@ -42,7 +42,7 @@ public class IRBasicBlock extends Value {
         }
         raw.append("\n");
         instructions.forEach(tmp->raw.append("\t").append(tmp.toString()).append("\n"));
-        raw.append(terminator.toString()).append("\n");
+        raw.append("\t").append(terminator.toString()).append("\n");
         return raw.toString();
     }
 }

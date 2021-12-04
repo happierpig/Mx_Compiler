@@ -5,11 +5,13 @@ import Utils.Position;
 
 public abstract class ASTNode{
     private Position pos;
-    public Value value;
+    public Value operand;
+
     public ASTNode(Position _pos){
         this.pos = _pos;
-        this.value = null;
+        this.operand = null;
     }
+
     public Position getPos(){
         return pos;
     }
