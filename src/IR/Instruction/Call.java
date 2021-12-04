@@ -1,41 +1,33 @@
 package IR.Instruction;
 
+import IR.BaseClass.Value;
+import IR.IRBasicBlock;
 import IR.IRFunction;
-import IR.Operand.Register;
-import IR.TypeSystem.Void;
-import java.util.LinkedList;
+import IR.TypeSystem.FunctionType;
+import IR.TypeSystem.VoidType;
 
 public class Call extends IRInstruction{
-    public IRFunction func;
-    public Register destReg;
-    public LinkedList<Register> parameters;
 
-    public Call(IRFunction _func) {
-        this.func = _func;
-        this.destReg = null;
-        this.parameters = new LinkedList<>();
+    public Call(IRFunction _func, IRBasicBlock _block) {
+        super("_call_"+_func.name, ((FunctionType)_func.type).returnType, _block);
+        this.addOperand(_func);
     }
 
-    public Call(IRFunction _func,Register _destReg){
-        this.func = _func;
-        this.destReg = _destReg;
-        this.destReg.setType(_func.returnType);
-        this.parameters = new LinkedList<>();
-    }
-
-    public void addParameter(Register _reg){
-        this.parameters.add(_reg);
+    public void addArg(Value _arg){
+        this.addOperand(_arg);
     }
 
     @Override
     public String toString() {
         StringBuilder raw = new StringBuilder();
-        if(!(this.func.returnType instanceof Void)) {
-            raw.append(this.destReg.getName()).append(" = ");
+        if(!(this.type instanceof VoidType)){
+            raw.append(this.getName()).append(" = ");
         }
-        raw.append("call ").append(this.func.returnType.toString()).append(" @").append(this.func.getName()).append('(');
-        if(this.parameters.size() != 0){
-            this.parameters.forEach(tmp->raw.append(tmp.toString()).append(", "));
+        raw.append("call ").append(this.getOperand(0).getTypeName()).append('(');
+        if(operands.size() > 1) {
+            for (int i = 1; i < operands.size(); ++i) {
+                raw.append(this.getOperand(i).getTypeName()).append(", ");
+            }
             raw.delete(raw.length()-2,raw.length());
         }
         raw.append(')');

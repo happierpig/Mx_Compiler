@@ -1,23 +1,17 @@
 package IR.Instruction;
 
-
-import IR.Operand.IROperand;
-import IR.Operand.Register;
-import IR.TypeSystem.IRType;
-import IR.TypeSystem.Pointer;
+import IR.BaseClass.Value;
+import IR.IRBasicBlock;
 
 public class Load extends IRInstruction{
-    public Register destReg;
-    public IROperand address;
 
-    public Load(Register _dest,IROperand _addr){
-        this.destReg = _dest;
-        this.address = _addr;
-        this.destReg.setType(_addr.type.dePointer());
+    public Load(String _name, Value _address, IRBasicBlock _block) {
+        super(_name+".load",_address.type.dePointed() , _block);
+        this.addOperand(_address);
     }
 
     @Override
     public String toString() {
-        return this.destReg.getName() + " = load " + this.destReg.type.toString() + ", " + this.address.toString();
+        return this.getName() + " = load " + this.type.toString() + ", " + this.getOperand(0).getTypeName();
     }
 }

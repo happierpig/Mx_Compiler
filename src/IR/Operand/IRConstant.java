@@ -1,12 +1,10 @@
 package IR.Operand;
 
+import IR.BaseClass.User;
 import IR.TypeSystem.IRType;
 
-public abstract class IRConstant extends IROperand{
-    public IRConstant(){
-        super(null);
-    }
-    public IRConstant(IRType _type){
-        super(_type);
+public abstract class IRConstant extends User {
+    public IRConstant(String name, IRType _type) {
+        super(name, _type);
     }
 }

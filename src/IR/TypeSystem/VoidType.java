@@ -1,6 +1,6 @@
 package IR.TypeSystem;
 
-public class Void extends IRType{
+public class VoidType extends IRType{
 
     @Override
     public String toString() {
@@ -9,6 +9,6 @@ public class Void extends IRType{
 
     @Override
     public boolean isEqual(IRType other) {
-        return (other instanceof Void);
+        return (other instanceof VoidType);
     }
 }

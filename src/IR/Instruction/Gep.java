@@ -1,26 +1,23 @@
 package IR.Instruction;
 
-import IR.Operand.IROperand;
-import IR.Operand.Register;
-import IR.TypeSystem.Array;
-import IR.TypeSystem.Pointer;
+import IR.BaseClass.Value;
+import IR.IRBasicBlock;
+import IR.TypeSystem.ArrayType;
+import IR.TypeSystem.IRType;
+import IR.TypeSystem.PointerType;
 
 public class Gep extends IRInstruction{
-    public Register destReg;
-    public IROperand source;
     public int index;
-    public Array arrayType;
 
-    public Gep(Register _dest,IROperand _source,int _index){
-        this.destReg = _dest;
-        this.source = _source;
+    public Gep(String _name, Value _value, int _index, IRBasicBlock _block) {
+        super(_name+"_gep", new PointerType(((ArrayType)_value.type.dePointed()).baseType), _block);
+        this.addOperand(_value);
         this.index = _index;
-        this.arrayType = (Array) this.source.type.dePointer();
-        this.destReg.setType(new Pointer(this.arrayType.baseType));
     }
 
     @Override
     public String toString() {
-        return this.destReg.getName() + " = getelementptr inbounds " + arrayType.toString() + ", " + source.type.toString() + " " + source.getName() + ", i32 0, i32 " + index;
+        return this.getName() + " = getelementptr inbounds " + this.getOperand(0).type.dePointed().toString()
+                + ", " + this.getOperand(0).getTypeName() + ", i32 0, i32 " + index;
     }
 }

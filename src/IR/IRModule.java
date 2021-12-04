@@ -2,29 +2,41 @@ package IR;
 
 import IR.Instruction.GlobalDef;
 import IR.Operand.StringConstant;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class IRModule{
-    public LinkedList<IRFunction> functions;
-    public LinkedList<StringConstant> strings;
-    public LinkedList<GlobalDef> globalDefs;
-
+    public ArrayList<IRFunction> functionList;
+    public ArrayList<StringConstant> stringList;
+    public ArrayList<GlobalDef> globalDefList;
+    public ArrayList<IRFunction> globalInitList;
 
     public IRModule(){
-        functions = new LinkedList<>();
-        strings = new LinkedList<>();
-        globalDefs = new LinkedList<>();
+        functionList = new ArrayList<>();
+        stringList = new ArrayList<>();
+        globalDefList = new ArrayList<>();
+        globalInitList = new ArrayList<>();
     }
 
-    public void addFunction(IRFunction _fun){
-        this.functions.add(_fun);
+    public void addFunction(IRFunction _func){
+        functionList.add(_func);
     }
 
-    public String toLLVM(){
+    public void addString(StringConstant _string){
+        stringList.add(_string);
+    }
+
+    public void addGlobalDef(GlobalDef _gd){
+         globalDefList.add(_gd);
+    }
+
+    public String toString(){
         StringBuilder raw = new StringBuilder();
-        if(strings.size() != 0) strings.forEach(tmp->raw.append(tmp.printLLVM()).append("\n"));
-        if(globalDefs.size() != 0) globalDefs.forEach(tmp->raw.append(tmp.toString()).append("\n"));
-        functions.forEach(tmp->raw.append(tmp.toString()));
+        if(stringList.size() != 0) stringList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
+        if(globalDefList.size() != 0) globalDefList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
+        if(globalInitList.size() != 0) {
+            //todo :
+        }
+        functionList.forEach(tmp->raw.append(tmp.toString()));
         return raw.toString();
     }
 }

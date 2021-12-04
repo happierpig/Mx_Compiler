@@ -1,39 +1,47 @@
 package IR;
 
-import IR.Operand.Register;
+import IR.BaseClass.User;
+import IR.BaseClass.Value;
 import IR.TypeSystem.IRType;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
-public class IRFunction{
-    public String funcName;
-    public IRType returnType;
-    public IRBasicBlock entryBlock;
-    public IRBasicBlock exitBlock;
-    public LinkedList<Register> parameters;
-    public LinkedList<IRBasicBlock> blocks;
-    public Register returnAddress;
+public class IRFunction extends User{
+    public ArrayList<IRBasicBlock> blockList;
+    public Value returnAddress; // returnType == void ? null : valid_address;
 
-    public IRFunction(String _name){
-        this.funcName = _name;
-        this.parameters = new LinkedList<>();
-        this.blocks = new LinkedList<>();
+    public IRFunction(String _name, IRType _type) {
+        super(_name, _type);
+        this.blockList = new ArrayList<>();
+        this.returnAddress = null;
     }
 
-    public String getName(){
-        return this.funcName.equals("main") ? this.funcName : "_func_" + this.funcName;
+    public void addBlock(IRBasicBlock _bb){
+        blockList.add(_bb);
     }
 
-    public String toString(){
+    public IRBasicBlock entryBlock(){ return this.blockList.get(0); }
+
+    public IRBasicBlock exitBlock(){ return this.blockList.get(1); }
+
+    public void addParameter(Value _para){
+        this.addOperand(_para);
+    }
+
+    @Override
+    public String getName() {
+        return "@ " + this.name;
+    }
+
+    @Override
+    public String toString() {
         StringBuilder raw = new StringBuilder();
-        raw.append("define ").append(returnType.toString()).append(" @").append(this.getName()).append('(');
-        if(parameters.size() != 0){
-            parameters.forEach(tmp->raw.append(tmp.toString()).append(", "));
+        raw.append("define ").append(this.type.toString()).append(" @").append(this.getName()).append('(');
+        if(this.operands.size() != 0){
+            this.operands.forEach(tmp->raw.append(tmp.getTypeName()).append(", "));
             raw.delete(raw.length()-2,raw.length());
         }
         raw.append(")\t{\n");
-        raw.append(entryBlock.toString());
-        blocks.forEach(tmp->raw.append(tmp.toString()));
-        raw.append(exitBlock.toString());
+        blockList.forEach(tmp->raw.append(tmp.toString()));
         raw.append("}\n");
         return raw.toString();
     }

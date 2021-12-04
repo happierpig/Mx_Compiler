@@ -1,19 +1,25 @@
 package IR.Instruction;
 
-
-import IR.Operand.IROperand;
+import IR.BaseClass.Value;
+import IR.IRBasicBlock;
+import IR.TypeSystem.IRType;
+import IR.TypeSystem.VoidType;
 
 public class Store extends IRInstruction{
-    public IROperand value;
-    public IROperand address;
 
-    public Store(IROperand _value,IROperand _address){
-        this.value = _value;
-        this.address = _address;
+    public Store(Value _value, Value _address, IRBasicBlock _block) {
+        super("_store", new VoidType(), _block);
+        this.addOperand(_value);
+        this.addOperand(_address);
+    }
+
+    @Override
+    public String getName() {
+        throw new RuntimeException("[Debug] Why get name in Store ? ");
     }
 
     @Override
     public String toString() {
-        return "store " + this.value.toString() + ", " + this.address.toString();
+        return "store " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getTypeName();
     }
 }

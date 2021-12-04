@@ -1,52 +1,48 @@
 package IR;
 
+import IR.BaseClass.Value;
+import IR.Instruction.Branch;
 import IR.Instruction.IRInstruction;
-import java.util.HashSet;
+import IR.Instruction.Ret;
+import IR.TypeSystem.LabelType;
 import java.util.LinkedList;
 
-public class IRBasicBlock{
-    public String blockName;
+public class IRBasicBlock extends Value {
     public LinkedList<IRInstruction> instructions;
-    public static int globalCount = 1;
-    public HashSet<IRBasicBlock> pred;
-    public HashSet<IRBasicBlock> suc;
+    public IRInstruction terminator;
+    public IRFunction parentFunction;
 
-    public IRBasicBlock(String _name){
-        this.blockName = "_BB" + IRBasicBlock.globalCount + _name;
-        ++IRBasicBlock.globalCount;
-        instructions = new LinkedList<>();
-        pred = new HashSet<>();
-        suc = new HashSet<>();
+    public IRBasicBlock(String _name, IRFunction _parent) {
+        super(_name+"_bb", new LabelType());
+        this.parentFunction = _parent;
+        _parent.addBlock(this);
+        this.instructions = new LinkedList<>();
+        this.terminator = null;
     }
 
-    public IRBasicBlock addInstruction(IRInstruction _instr){
-        instructions.add(_instr);
-        return this;
+    public void addInstruction(IRInstruction _instr){
+        if(_instr instanceof Branch || _instr instanceof Ret) setTerminator(_instr);
+        else this.instructions.add(_instr);
     }
 
-    public void addPrev(IRBasicBlock _pred){
-        pred.add(_pred);
+    public void setTerminator(IRInstruction _terminator){
+        if(this.terminator != null) throw new RuntimeException("[Debug] duplicate set terminator.");
+        this.terminator = _terminator;
     }
 
-    public void addSuc(IRBasicBlock _suc){
-        suc.add(_suc);
-    }
-
-    public String getName(){
-        return this.blockName;
-    }
-
-    public String toString(){
+    @Override
+    public String toString() {
         StringBuilder raw = new StringBuilder();
-        raw.append(this.blockName); raw.append(":");
+        raw.append(this.name); raw.append(":");
         // pred
-        if(this.pred.size() != 0){
+        if(this.useList.size() != 0){
             raw.append("\t\t\t\t\t ;preds = ");
-            pred.forEach(tmp->raw.append(tmp.blockName).append(", "));
+            useList.forEach(tmp->raw.append(((Branch)tmp).parentBlock.getName()).append(", "));
             raw.delete(raw.length()-2,raw.length());
         }
         raw.append("\n");
         instructions.forEach(tmp->raw.append("\t").append(tmp.toString()).append("\n"));
+        raw.append(terminator.toString()).append("\n");
         return raw.toString();
     }
 }

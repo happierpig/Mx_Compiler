@@ -1,21 +1,16 @@
 package IR.Instruction;
 
-import IR.Operand.Register;
+import IR.IRBasicBlock;
 import IR.TypeSystem.IRType;
-import IR.TypeSystem.Pointer;
+import IR.TypeSystem.PointerType;
 
 public class Alloc extends IRInstruction{
-    public Register destReg;
-    public IRType type;
-
-    public Alloc(Register _destReg,IRType _type){
-        this.destReg = _destReg;
-        this.type = _type;
-        this.destReg.setType(new Pointer(_type));
+    public Alloc(String _name, IRType _type, IRBasicBlock _block) {
+        super(_name+".alloc", new PointerType(_type), _block);
     }
 
     @Override
     public String toString() {
-        return this.destReg.getName() + " = alloca " + this.type.toString();
+        return this.getName() + " = alloca " + this.type.dePointed().toString();
     }
 }

@@ -1,31 +1,23 @@
 package IR.Instruction;
 
-import IR.Operand.GlobalVariable;
-import IR.Operand.IRConstant;
-import IR.Operand.IROperand;
+import IR.IRBasicBlock;
 import IR.TypeSystem.IRType;
-import IR.TypeSystem.Pointer;
+import IR.TypeSystem.PointerType;
 
 public class GlobalDef extends IRInstruction{
-    //todo: global variable init process
-    public GlobalVariable destVal;
-    public IRType type;
-    public IRConstant initValue;
 
-    public GlobalDef(GlobalVariable _dest,IRType _type){
-        this.destVal = _dest;
-        this.type = _type;
-        this.destVal.setType(new Pointer(this.type));
-        this.initValue = null;
-    }
-
-    public void setInitValue(IRConstant _initvalue){
-        this.initValue = _initvalue;
+    public GlobalDef(String _name, IRType _type, IRBasicBlock _block) {
+        super(_name+"_glo", new PointerType(_type), _block);
     }
 
     @Override
+    public String getName() {
+        return "@ " + this.name;
+    }
+
+    // toString for instruction is to print llvm
+    @Override
     public String toString() {
-        if(this.initValue == null) return this.destVal.toString() + " = global " + this.type.toString() + " zeroinitializer";
-        else return this.destVal.toString() + " = global " + " " + initValue.toString();
+        return this.getName() + " = global " + this.type.dePointed().toString() + " zeroinitializer";
     }
 }
