@@ -9,7 +9,7 @@ import IR.TypeSystem.VoidType;
 public class Call extends IRInstruction{
 
     public Call(IRFunction _func, IRBasicBlock _block) {
-        super("_call_"+_func.name, ((FunctionType)_func.type).returnType, _block);
+        super("_call"+_func.name, ((FunctionType)_func.type).returnType, _block);
         this.addOperand(_func);
     }
 

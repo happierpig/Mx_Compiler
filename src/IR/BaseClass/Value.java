@@ -29,7 +29,7 @@ public class Value{
     }
 
     public String renaming(String _name){
-        if(_name.equals("main")) return _name;
+        if(_name.equals("_f_main")) return "main";
         Integer count = renamingMachine.get(_name);
         if(count == null){
             count = 0;

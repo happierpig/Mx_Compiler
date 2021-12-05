@@ -48,7 +48,7 @@ public class IRBuilder implements ASTVisitor {
                 funcType.addParameters(argType);
             });
             typeTable.put(funcName,funcType);
-            funcTable.put(funcName,new IRFunction(funcName,funcType));
+            funcTable.put(funcName,new IRFunction("_f_"+funcName,funcType));
         });
 
         //todo : collect Class information
@@ -144,6 +144,7 @@ public class IRBuilder implements ASTVisitor {
             this.memoryStore(returnValue,curFunction.returnAddress);
         }
         new Branch(curBlock,curFunction.exitBlock());
+        // todo : add something to complete Return
         curBlock = null;
     }
 
@@ -156,8 +157,8 @@ public class IRBuilder implements ASTVisitor {
         Value.refresh();
         Value tmpReturnValue;
         if(!curFunction.type.toString().equals("void")){
-            curFunction.returnAddress = new Alloc("_exit_address",((FunctionType)curFunction.type).returnType,tmpEntry);
-            tmpReturnValue = new Load("_return_value",curFunction.returnAddress,tmpExit);
+            curFunction.returnAddress = new Alloc("_return",((FunctionType)curFunction.type).returnType,tmpEntry);
+            tmpReturnValue = new Load("_return",curFunction.returnAddress,tmpExit);
         }else tmpReturnValue = new Value("Anonymous",new VoidType());
         new Ret(tmpReturnValue,tmpExit);
         curBlock = curFunction.entryBlock();
@@ -176,6 +177,11 @@ public class IRBuilder implements ASTVisitor {
         curBlock = null;
         cScope = cScope.parent;
         targetModule.addFunction(curFunction);
+    }
+
+    @Override
+    public void visit(IfStmtNode node) {
+
     }
 
     @Override
@@ -225,11 +231,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ForStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(IfStmtNode node) {
 
     }
 
