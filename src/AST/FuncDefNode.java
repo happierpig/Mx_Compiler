@@ -9,6 +9,7 @@ public class FuncDefNode extends ASTNode{
     public ArrayList<VarDefNode> parameterList;
     public BlockStmtNode funcBody;
     public boolean hasReturn;
+    public boolean isBuiltin;
 
     public FuncDefNode(TypeNode _funcType,String _name,ArrayList<VarDefNode> _list,BlockStmtNode _body,Position _pos){
         super(_pos);
@@ -17,6 +18,7 @@ public class FuncDefNode extends ASTNode{
         this.parameterList = _list;
         this.funcBody = _body;
         this.hasReturn = false;
+        this.isBuiltin = false;
     }
 
     @Override

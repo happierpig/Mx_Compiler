@@ -11,6 +11,6 @@ public class Alloc extends IRInstruction{
 
     @Override
     public String toString() {
-        return this.getName() + " = alloca " + this.type.dePointed().toString();
+        return this.getName() + " = alloca " + this.type.dePointed().toString() + ", align " + this.type.dePointed().byteSize();
     }
 }

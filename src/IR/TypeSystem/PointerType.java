@@ -20,6 +20,11 @@ public class PointerType extends IRType{
     }
 
     @Override
+    public int byteSize() {
+        return 8;
+    }
+
+    @Override
     public String toString() {
         return this.baseType.toString() + "*".repeat(this.dimSize);
     }

@@ -2,12 +2,15 @@ package IR;
 
 import IR.BaseClass.User;
 import IR.BaseClass.Value;
+import IR.TypeSystem.FunctionType;
 import IR.TypeSystem.IRType;
 import java.util.ArrayList;
 
 public class IRFunction extends User{
     public ArrayList<IRBasicBlock> blockList;
     public Value returnAddress; // returnType == void ? null : valid_address;
+    public boolean isBuiltin = false;
+    public boolean isUsed = false;
 
     public IRFunction(String _name, IRType _type) {
         super(_name, _type);
@@ -27,6 +30,14 @@ public class IRFunction extends User{
         this.addOperand(_para);
     }
 
+    public void setBuiltin(){
+        this.isBuiltin = true;
+    }
+
+    public void setUsed(){
+        this.isUsed = true;
+    }
+
     @Override
     public String getName() {
         return "@" + this.name;
@@ -35,14 +46,23 @@ public class IRFunction extends User{
     @Override
     public String toString() {
         StringBuilder raw = new StringBuilder();
-        raw.append("define ").append(this.type.toString()).append(' ').append(this.getName()).append('(');
-        if(this.operands.size() != 0){
-            this.operands.forEach(tmp->raw.append(tmp.getTypeName()).append(", "));
-            raw.delete(raw.length()-2,raw.length());
+        if(!isBuiltin) {
+            raw.append("define ").append(this.type.toString()).append(' ').append(this.getName()).append('(');
+            if (this.operands.size() != 0) {
+                this.operands.forEach(tmp -> raw.append(tmp.getTypeName()).append(", "));
+                raw.delete(raw.length() - 2, raw.length());
+            }
+            raw.append(")\t{\n");
+            blockList.forEach(tmp -> raw.append(tmp.toString()));
+            raw.append("}\n");
+        }else if(isUsed){
+            raw.append("declare ").append(this.type.toString()).append(' ').append(this.getName()).append('(');
+            if (((FunctionType)this.type).parameters.size() != 0) {
+                ((FunctionType)this.type).parameters.forEach(tmp -> raw.append(tmp.toString()).append(", "));
+                raw.delete(raw.length() - 2, raw.length());
+            }
+            raw.append(")\n");
         }
-        raw.append(")\t{\n");
-        blockList.forEach(tmp->raw.append(tmp.toString()));
-        raw.append("}\n");
         return raw.toString();
     }
 }

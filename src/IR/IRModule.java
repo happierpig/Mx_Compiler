@@ -41,7 +41,7 @@ public class IRModule{
             raw.append("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL_0, i8* null }]").append("\n");
             globalInitList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
         }
-        functionList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
+        functionList.forEach(tmp->raw.append(tmp.toString()));
         return raw.toString();
     }
 }

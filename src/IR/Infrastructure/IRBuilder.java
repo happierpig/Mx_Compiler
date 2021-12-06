@@ -49,7 +49,10 @@ public class IRBuilder implements ASTVisitor {
                 funcType.addParameters(argType);
             });
             typeTable.put(funcName,funcType);
-            funcTable.put(funcName,new IRFunction("_f_"+funcName,funcType));
+            IRFunction _func = new IRFunction("_f_"+funcName,funcType);
+            if(funcNode.isBuiltin) _func.setBuiltin();
+            funcTable.put(funcName,_func);
+            targetModule.addFunction(_func);
         });
 
         //todo : collect Class information
@@ -126,11 +129,10 @@ public class IRBuilder implements ASTVisitor {
             // todo : class function call
             func = null;
         }
+        if(node.AryList != null) node.AryList.forEach(tmp-> tmp.accept(this));
         Call newOperand = new Call(func,curBlock);
-        if(node.AryList != null) node.AryList.forEach(tmp->{
-            tmp.accept(this);
-            newOperand.addArg(tmp.IRoperand);
-        });
+        if(node.AryList != null) node.AryList.forEach(tmp->newOperand.addArg(tmp.IRoperand));
+        if(func.isBuiltin) func.setUsed();
         node.IRoperand = newOperand;
     }
 
@@ -175,7 +177,6 @@ public class IRBuilder implements ASTVisitor {
 
         curBlock = null;
         cScope = cScope.parent;
-        targetModule.addFunction(curFunction);
     }
 
     @Override
@@ -303,6 +304,7 @@ public class IRBuilder implements ASTVisitor {
         }else new Branch(curBlock,node.condition.IRoperand,thenBlock,termBlock);
         curBlock = thenBlock;
         node.thenCode.accept(this);
+        // todo :debug
         new Branch(curBlock,termBlock);
         curBlock = termBlock;
         cScope = cScope.parent;
@@ -359,7 +361,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(ArrayTypeNode node) {
+    public void visit(NewExprNode node) {
 
     }
 
@@ -375,11 +377,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ContinueStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(NewExprNode node) {
 
     }
 
@@ -406,6 +403,11 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ClassTypeNode node) {
+
+    }
+
+    @Override
+    public void visit(ArrayTypeNode node) {
 
     }
 

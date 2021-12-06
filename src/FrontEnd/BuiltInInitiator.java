@@ -12,26 +12,33 @@ public class BuiltInInitiator{
         ArrayList<VarDefNode> tmp_List = new ArrayList<>();
         tmp_List.add(new VarDefNode(new ClassTypeNode("string",new Position(-1,-1)),"str",null,new Position(-1,-1)));
         FuncDefNode tmp = new FuncDefNode(new VoidTypeNode(new Position(-1,-1)),"print",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("print",tmp);
 
         tmp = new FuncDefNode(new VoidTypeNode(new Position(-1,-1)),"println",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("println",tmp);
 
         tmp_List = new ArrayList<>();
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"n",null,new Position(-1,-1)));
         tmp = new FuncDefNode(new VoidTypeNode(new Position(-1,-1)),"printInt",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("printInt",tmp);
 
         tmp = new FuncDefNode(new VoidTypeNode(new Position(-1,-1)),"printlnInt",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("printlnInt",tmp);
 
         tmp = new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"getString",null,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("getString",tmp);
 
         tmp = new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"getInt",null,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("getInt",tmp);
 
         tmp = new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"toString",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
         initScope.define_Function("toString",tmp);
 
         //built-in class

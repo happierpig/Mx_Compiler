@@ -10,6 +10,11 @@ public class ArrayType extends IRType{
     }
 
     @Override
+    public int byteSize() {
+        throw new RuntimeException("[Debug] Why use byteSize in Array type ?");
+    }
+
+    @Override
     public String toString() {
         return "[" + this.size + " x " + this.baseType.toString() + "]";
     }

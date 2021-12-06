@@ -8,6 +8,11 @@ public class IntegerType extends IRType{
     }
 
     @Override
+    public int byteSize() {
+        return this.width / 8;
+    }
+
+    @Override
     public String toString() {
         return "i" + this.width;
     }

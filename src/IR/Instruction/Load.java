@@ -12,6 +12,6 @@ public class Load extends IRInstruction{
 
     @Override
     public String toString() {
-        return this.getName() + " = load " + this.type.toString() + ", " + this.getOperand(0).getTypeName();
+        return this.getName() + " = load " + this.type.toString() + ", " + this.getOperand(0).getTypeName() + ", align " + this.type.byteSize();
     }
 }

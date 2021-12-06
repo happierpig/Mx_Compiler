@@ -18,6 +18,6 @@ public class GlobalDef extends IRInstruction{
     // toString for instruction is to print llvm
     @Override
     public String toString() {
-        return this.getName() + " = global " + this.type.dePointed().toString() + " zeroinitializer";
+        return this.getName() + " = global " + this.type.dePointed().toString() + " zeroinitializer, align " + this.type.dePointed().byteSize();
     }
 }
