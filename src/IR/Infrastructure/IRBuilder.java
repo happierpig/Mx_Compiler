@@ -10,6 +10,7 @@ import IR.Operand.*;
 import IR.TypeSystem.*;
 import Utils.GlobalScope;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class IRBuilder implements ASTVisitor {
     public IRModule targetModule;
@@ -17,6 +18,7 @@ public class IRBuilder implements ASTVisitor {
     public IRScope cScope;
     public HashMap<String, IRType> typeTable;
     public HashMap<String, IRFunction> funcTable;
+    public LinkedList<VarDefNode> globalInit;
     public IRBasicBlock curBlock;
     public IRFunction curFunction;
     public enum Operator{add, sub, mul, sdiv, srem, shl, ashr, and, or, xor, logic_and, logic_or, eq, ne, sgt, sge, slt, sle, assign}
@@ -27,6 +29,7 @@ public class IRBuilder implements ASTVisitor {
         this.cScope = new IRScope(null);
         this.typeTable = new HashMap<>();
         this.funcTable = new HashMap<>();
+        this.globalInit = new LinkedList<>();
         this.curBlock = null;
         this.curFunction = null;
         gScope.Class_Table.forEach((className,classScope)->{
@@ -99,9 +102,7 @@ public class IRBuilder implements ASTVisitor {
                     initValue = new Gep(node.identifier, node.initValue.IRoperand, 0, curBlock);
                 }else initValue = node.initValue.IRoperand;
                 this.memoryStore(initValue,value);
-            }else{
-                //todo : global value init;
-            }
+            }else globalInit.add(node);
         }
     }
 
@@ -149,10 +150,10 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(FuncDefNode node) {
         curFunction = funcTable.get(node.identifier);
-        IRBasicBlock tmpEntry = new IRBasicBlock(node.identifier,curFunction); // entry-Block
-        IRBasicBlock tmpExit = new IRBasicBlock(node.identifier,curFunction); // exit-Block
         cScope = new IRScope(cScope);
         Value.refresh();
+        IRBasicBlock tmpEntry = new IRBasicBlock(curFunction.name,curFunction); // entry-Block
+        IRBasicBlock tmpExit = new IRBasicBlock(curFunction.name,curFunction); // exit-Block
         Value tmpReturnValue;
         if(!curFunction.type.toString().equals("void")){
             curFunction.returnAddress = new Alloc("_return",((FunctionType)curFunction.type).returnType,tmpEntry);
@@ -168,7 +169,7 @@ public class IRBuilder implements ASTVisitor {
             cScope.setVariable(tmp.identifier,realArg);
         });
         if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(stmt->{
-            if(curBlock == null) curBlock = new IRBasicBlock(node.identifier,curFunction);
+            if(curBlock == null) curBlock = new IRBasicBlock(curFunction.name,curFunction);
             stmt.accept(this);
         });
 
@@ -280,8 +281,31 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(IfStmtNode node) {
+    public void visit(BlockStmtNode node) {
+        cScope = new IRScope(cScope);
+        if(node.stmtList != null) node.stmtList.forEach(tmp->tmp.accept(this));
+        cScope = cScope.parent;
+    }
 
+    @Override
+    public void visit(IfStmtNode node) {
+        node.IRoperand = null;
+        cScope = new IRScope(cScope);
+        IRBasicBlock thenBlock = new IRBasicBlock("if_then",curFunction);
+        IRBasicBlock termBlock = new IRBasicBlock(curFunction.name,curFunction);
+        node.condition.accept(this);
+        if(node.elseCode != null){
+            IRBasicBlock elseBlock = new IRBasicBlock("if_else",curFunction);
+            new Branch(curBlock,node.condition.IRoperand,thenBlock,elseBlock);
+            curBlock = elseBlock;
+            node.elseCode.accept(this);
+            new Branch(curBlock,termBlock);
+        }else new Branch(curBlock,node.condition.IRoperand,thenBlock,termBlock);
+        curBlock = thenBlock;
+        node.thenCode.accept(this);
+        new Branch(curBlock,termBlock);
+        curBlock = termBlock;
+        cScope = cScope.parent;
     }
 
     @Override
@@ -291,11 +315,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ArrayTypeNode node) {
-
-    }
-
-    @Override
-    public void visit(BlockStmtNode node) {
 
     }
 
@@ -495,5 +514,32 @@ public class IRBuilder implements ASTVisitor {
         this.memoryStore(tmpRs2,tmpAddress); new Branch(curBlock,tBlock);
         this.curBlock = tBlock;
         return this.memoryLoad("circuit",tmpAddress,false);
+    }
+
+    public void processGlobalInit(){
+        if(this.globalInit.size() == 0) return;
+        FunctionType tempType = new FunctionType(new VoidType());
+        IRFunction entryFunction = new IRFunction("_GLOBAL_",tempType);
+        IRBasicBlock mainBody = new IRBasicBlock(entryFunction.name,entryFunction);
+        this.globalInit.forEach(node->{
+            IRFunction nowFunction = new IRFunction("_global_var_init",tempType);
+            Value address = cScope.fetchValue(node.identifier);
+            this.curFunction = nowFunction;
+            this.curBlock = new IRBasicBlock(node.identifier,curFunction); // entry-Block
+            IRBasicBlock tmpExit = new IRBasicBlock(node.identifier,curFunction); // exit-Block
+            new Ret(new Value("Anonymous",new VoidType()),tmpExit);
+            Value initValue;
+            node.initValue.accept(this);
+            if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(typeTable.get(node.varType.typeId));
+            if (node.initValue.IRoperand instanceof StringConstant) {
+                initValue = new Gep(node.identifier, node.initValue.IRoperand, 0, curBlock);
+            }else initValue = node.initValue.IRoperand;
+            this.memoryStore(initValue,address);
+            new Branch(curBlock,tmpExit);
+            this.targetModule.addGlobalInit(curFunction);
+            new Call(nowFunction,mainBody);
+        });
+        new Ret(new Value("Anonymous",new VoidType()),mainBody);
+        this.targetModule.addGlobalInit(entryFunction);
     }
 }

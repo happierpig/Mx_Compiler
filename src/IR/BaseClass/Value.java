@@ -34,7 +34,10 @@ public class Value{
         if(count == null){
             count = 0;
             renamingMachine.put(_name,count);
-        }else count++;
+        }else{
+            count++;
+            renamingMachine.put(_name,count);
+        }
         return _name + count;
     }
 

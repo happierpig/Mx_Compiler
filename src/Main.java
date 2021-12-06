@@ -56,6 +56,7 @@ public class Main {
             IRModule module = new IRModule();
             IRBuilder irb = new IRBuilder(module,gScope);
             irb.visit(rt);
+            irb.processGlobalInit();
             System.out.println(module);
 
         } catch (RuntimeException er) {
