@@ -302,7 +302,7 @@ public class SemanticChecker implements ASTVisitor{
         }
         if(node.iteration != null) node.iteration.accept(this);
         if(node.loopBody != null){
-            if(node.loopBody instanceof BlockStmtNode) ((BlockStmtNode) node.loopBody).stmtList.forEach(tmp->tmp.accept(this));
+            if(node.loopBody instanceof BlockStmtNode) ((BlockStmtNode) node.loopBody).stmtList.forEach(tmp->tmp.accept(this)); // avoid new scope
             else node.loopBody.accept(this);
         }
         loops--;

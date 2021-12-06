@@ -309,6 +309,51 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
+    public void visit(WhileStmtNode node) {
+        // todo : add break / continue
+        node.IRoperand = null;
+        cScope = new IRScope(cScope);
+        IRBasicBlock condition = new IRBasicBlock("while_condition",curFunction);
+        IRBasicBlock loopBody = new IRBasicBlock("while_body",curFunction);
+        IRBasicBlock termBlock = new IRBasicBlock(curFunction.name,curFunction);
+        new Branch(curBlock,condition);
+        curBlock = condition;
+        node.condition.accept(this);
+        new Branch(curBlock,node.condition.IRoperand,loopBody,termBlock);
+        curBlock = loopBody;
+        node.loopBody.accept(this);
+        new Branch(curBlock,condition);
+        curBlock = termBlock;
+        cScope = cScope.parent;
+    }
+
+    @Override
+    public void visit(ForStmtNode node) {
+        // todo : none-condition situation && add break / continue
+        node.IRoperand = null;
+        cScope = new IRScope(cScope);
+        if(node.init != null) node.init.accept(this);
+        IRBasicBlock condition = new IRBasicBlock("for_condition",curFunction);
+        IRBasicBlock iter = new IRBasicBlock("for_iter",curFunction);
+        IRBasicBlock loopBody = new IRBasicBlock("for_body",curFunction);
+        IRBasicBlock termBody = new IRBasicBlock(curFunction.name,curFunction);
+        new Branch(curBlock,condition);
+        curBlock = condition;
+        if(node.condition != null){
+            node.condition.accept(this);
+            new Branch(curBlock,node.condition.IRoperand,loopBody,termBody);
+        }else new Branch(curBlock,loopBody);
+        curBlock = loopBody;
+        node.loopBody.accept(this);
+        new Branch(curBlock,iter);
+        curBlock = iter;
+        if(node.iteration != null) node.iteration.accept(this);
+        new Branch(curBlock,condition);
+        curBlock = termBody;
+        cScope = cScope.parent;
+    }
+
+    @Override
     public void visit(ArrayAccessExprNode node) {
 
     }
@@ -334,11 +379,6 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(ForStmtNode node) {
-
-    }
-
-    @Override
     public void visit(NewExprNode node) {
 
     }
@@ -351,11 +391,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ThisExprNode node) {
-
-    }
-
-    @Override
-    public void visit(WhileStmtNode node) {
 
     }
 
