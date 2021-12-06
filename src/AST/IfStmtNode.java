@@ -9,7 +9,7 @@ public class IfStmtNode extends StmtNode{
         super(_pos);
         this.condition = _condition;
         this.thenCode = _then;
-        this.elseCode = _else;
+        this.elseCode = _else; // maybe null
     }
 
     @Override

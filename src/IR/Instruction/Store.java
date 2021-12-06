@@ -2,6 +2,7 @@ package IR.Instruction;
 
 import IR.BaseClass.Value;
 import IR.IRBasicBlock;
+import IR.Operand.BoolConstant;
 import IR.TypeSystem.IRType;
 import IR.TypeSystem.VoidType;
 
@@ -20,6 +21,7 @@ public class Store extends IRInstruction{
 
     @Override
     public String toString() {
-        return "store " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getTypeName();
+        if(this.getOperand(0) instanceof BoolConstant) return "store i8 " + (((BoolConstant) this.getOperand(0)).value ? 1 : 0) + ", " + this.getOperand(1).getTypeName();
+        else return "store " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getTypeName();
     }
 }

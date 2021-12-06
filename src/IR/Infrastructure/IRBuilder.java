@@ -6,10 +6,7 @@ import IR.IRBasicBlock;
 import IR.IRFunction;
 import IR.IRModule;
 import IR.Instruction.*;
-import IR.Operand.BoolConstant;
-import IR.Operand.IntConstant;
-import IR.Operand.NullConstant;
-import IR.Operand.StringConstant;
+import IR.Operand.*;
 import IR.TypeSystem.*;
 import Utils.GlobalScope;
 import java.util.HashMap;
@@ -22,6 +19,7 @@ public class IRBuilder implements ASTVisitor {
     public HashMap<String, IRFunction> funcTable;
     public IRBasicBlock curBlock;
     public IRFunction curFunction;
+    public enum Operator{add, sub, mul, sdiv, srem, shl, ashr, and, or, xor, logic_and, logic_or, eq, ne, sgt, sge, slt, sle, assign}
 
     public IRBuilder(IRModule _module, GlobalScope _gScope){
         this.targetModule = _module;
@@ -61,12 +59,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(IntConstantExprNode node) {
-        node.operand = new IntConstant(node.value);
+        node.IRoperand = new IntConstant(node.value);
     }
 
     @Override
     public void visit(BoolConstantExprNode node) {
-        node.operand = new BoolConstant(node.value);
+        node.IRoperand = new BoolConstant(node.value);
     }
 
     @Override
@@ -74,12 +72,12 @@ public class IRBuilder implements ASTVisitor {
         //todo : check repeated constant declaration
         StringConstant stringLiteral = new StringConstant(processRaw(node.value));
         targetModule.addString(stringLiteral);
-        node.operand = stringLiteral;
+        node.IRoperand = stringLiteral;
     }
 
     @Override
     public void visit(NullConstantExprNode node) {
-        node.operand = new NullConstant();
+        node.IRoperand = new NullConstant();
     }
 
     @Override
@@ -91,17 +89,16 @@ public class IRBuilder implements ASTVisitor {
             targetModule.addGlobalDef((GlobalDef) value);
         }else value = stackAlloc(node.identifier,valueTy);
         cScope.setVariable(node.identifier,value);
-        node.operand = value;
+        node.IRoperand = value;
         if(node.initValue != null){ // init
             if(cScope.parent != null){ // local variable
                 node.initValue.accept(this);
                 Value initValue;
-                if(!(node.initValue.operand instanceof NullConstant)) {
-                    if (node.initValue.operand instanceof StringConstant) {
-                        initValue = new Gep(node.identifier, node.initValue.operand, 0, curBlock);
-                    }else initValue = node.initValue.operand;
-                    this.memoryStore(initValue,value);
-                }
+                if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(valueTy);
+                if (node.initValue.IRoperand instanceof StringConstant) {
+                    initValue = new Gep(node.identifier, node.initValue.IRoperand, 0, curBlock);
+                }else initValue = node.initValue.IRoperand;
+                this.memoryStore(initValue,value);
             }else{
                 //todo : global value init;
             }
@@ -115,7 +112,8 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(IdentifierExprNode node) {
-        node.operand = memoryLoad(node.identifier,cScope.fetchValue(node.identifier));
+        // visit id Node means load it in; So function call should not travel in this node :)
+        node.IRoperand = memoryLoad(node.identifier,cScope.fetchValue(node.identifier),node.exprType.typeId.equals("bool"));
     }
 
     @Override
@@ -130,9 +128,9 @@ public class IRBuilder implements ASTVisitor {
         Call newOperand = new Call(func,curBlock);
         if(node.AryList != null) node.AryList.forEach(tmp->{
             tmp.accept(this);
-            newOperand.addArg(tmp.operand);
+            newOperand.addArg(tmp.IRoperand);
         });
-        node.operand = newOperand;
+        node.IRoperand = newOperand;
     }
 
     @Override
@@ -140,7 +138,7 @@ public class IRBuilder implements ASTVisitor {
         if(node.returnVal != null){
             Value returnValue;
             node.returnVal.accept(this);
-            returnValue = node.returnVal.operand;
+            returnValue = node.returnVal.IRoperand;
             this.memoryStore(returnValue,curFunction.returnAddress);
         }
         new Branch(curBlock,curFunction.exitBlock());
@@ -180,6 +178,108 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
+    public void visit(ExprStmtNode node) {
+        node.expr.accept(this);
+    }
+
+    @Override
+    public void visit(BinaryExprNode node) {
+        IRBuilder.Operator op = translateOp(node.operator);
+        if(op == Operator.logic_and || op == Operator.logic_or){
+            Value newOperand = null;
+            node.LOperand.accept(this); Value tmpRs1 = node.LOperand.IRoperand;
+            switch (op){
+                case logic_and -> {
+                    if(tmpRs1 instanceof BoolConstant){
+                        if(!((BoolConstant) tmpRs1).value) newOperand = tmpRs1;
+                        else{
+                            node.ROperand.accept(this);
+                            newOperand = node.ROperand.IRoperand;
+                        }
+                    }else newOperand = shortCircuit(op,node,tmpRs1);
+                }
+                case logic_or -> {
+                    if(tmpRs1 instanceof BoolConstant){
+                        if(((BoolConstant) tmpRs1).value) newOperand = tmpRs1;
+                        else{
+                            node.ROperand.accept(this);
+                            newOperand = node.ROperand.IRoperand;
+                        }
+                    }else newOperand = shortCircuit(op,node,tmpRs1);
+                }
+            }
+            node.IRoperand = newOperand;
+        }else {
+            node.ROperand.accept(this);
+            Value tmpRs2 = node.ROperand.IRoperand;
+            if (op != Operator.assign) {
+                Value newOperand = null;
+                node.LOperand.accept(this);
+                Value tmpRs1 = node.LOperand.IRoperand; // lvalue do not need load in.
+                if (tmpRs1 instanceof IRConstant && tmpRs2 instanceof IRConstant) {
+                    newOperand = calculateConstant(op, (IRConstant) tmpRs1, (IRConstant) tmpRs2);
+                } else {
+                    switch (op) {
+                        case add, sub, mul, sdiv, srem, shl, ashr, and, or, xor -> newOperand = new Binary(op, tmpRs1, tmpRs2, curBlock);
+                        case eq, ne, sgt, sge, slt, sle -> {
+                            if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(tmpRs1.type);
+                            newOperand = new Icmp(op, tmpRs1, tmpRs2, curBlock);
+                        }
+                        default -> throw new RuntimeException("[Debug] Unknown Op again. :(");
+                    }
+                }
+                node.IRoperand = newOperand;
+            } else {
+                Value _address = getAddress(node.LOperand);
+                assert _address != null;
+                if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(_address.type.dePointed());
+                this.memoryStore(tmpRs2, _address);
+                node.IRoperand = tmpRs2;
+            }
+        }
+    }
+
+    @Override
+    public void visit(MonoExprNode node) {
+        // Class Node todo
+        node.operand.accept(this);
+        Value originValue = node.operand.IRoperand;
+        Value newOperand = originValue;
+        switch(node.operator){
+            case LNOT,BITNOT,POS,NEG -> {
+                if(originValue instanceof IRConstant){
+                    switch (node.operator){
+                        case LNOT -> newOperand = new BoolConstant(!((BoolConstant)originValue).value);
+                        case BITNOT -> newOperand = new IntConstant(~((IntConstant)originValue).value);
+                        case POS -> {}
+                        case NEG -> newOperand = new IntConstant(-((IntConstant)originValue).value);
+                    }
+                }else{
+                    switch (node.operator){
+                        case LNOT -> newOperand = new Binary(Operator.xor,originValue,new BoolConstant(true),curBlock);
+                        case BITNOT -> newOperand = new Binary(Operator.xor,originValue,new IntConstant(-1),curBlock);
+                        case POS -> {}
+                        case NEG -> newOperand = new Binary(Operator.sub,new IntConstant(0),originValue,curBlock);
+                    }
+                }
+            }
+            case PREINC, PREDEC, AFTINC, AFTDEC -> {
+                Value address = getAddress(node.operand);
+                Value newValue = null;
+                switch(node.operator) {
+                    case PREINC -> newValue = newOperand = new Binary(Operator.add,originValue,new IntConstant(1),curBlock);
+                    case PREDEC -> newValue = newOperand = new Binary(Operator.add,originValue,new IntConstant(-1),curBlock);
+                    case AFTINC -> newValue = new Binary(Operator.add,originValue,new IntConstant(1),curBlock);
+                    case AFTDEC -> newValue = new Binary(Operator.add,originValue,new IntConstant(-1),curBlock);
+                }
+                assert newValue != null;
+                this.memoryStore(newValue,address);
+            }
+        }
+        node.IRoperand = newOperand;
+    }
+
+    @Override
     public void visit(IfStmtNode node) {
 
     }
@@ -191,11 +291,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ArrayTypeNode node) {
-
-    }
-
-    @Override
-    public void visit(BinaryExprNode node) {
 
     }
 
@@ -215,27 +310,12 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(ClassTypeNode node) {
-
-    }
-
-    @Override
     public void visit(ContinueStmtNode node) {
 
     }
 
     @Override
-    public void visit(ExprStmtNode node) {
-
-    }
-
-    @Override
     public void visit(ForStmtNode node) {
-
-    }
-
-    @Override
-    public void visit(MonoExprNode node) {
 
     }
 
@@ -246,16 +326,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ObjectMemberExprNode node) {
-
+        // node.IROperand means load Value
+        // address need
     }
 
     @Override
     public void visit(ThisExprNode node) {
-
-    }
-
-    @Override
-    public void visit(VoidTypeNode node) {
 
     }
 
@@ -266,6 +342,16 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(LambdaExprNode node) {
+
+    }
+
+    @Override
+    public void visit(VoidTypeNode node) {
+
+    }
+
+    @Override
+    public void visit(ClassTypeNode node) {
 
     }
 
@@ -282,11 +368,132 @@ public class IRBuilder implements ASTVisitor {
         return new Alloc(identifier,_ty,curBlock);
     }
 
-    private Load memoryLoad(String identifier, Value address){
-        return new Load(identifier,address,curBlock);
+    private Value memoryLoad(String identifier, Value address, boolean mode){ //mode true for bool-load
+        Value tmp = new Load(identifier,address,curBlock);
+        return mode ? new Trunc(identifier,tmp,new IntegerType(1),curBlock) : tmp;
     }
 
-    private void memoryStore(Value value, Value address){new Store(value,address,curBlock);}
+    private void memoryStore(Value value, Value address){
+        Value target = value;
+        if(!(value instanceof BoolConstant) && value.type.isEqual(new IntegerType(1)) && address.type.isEqual(new PointerType(new IntegerType(8))))
+            target = new Zext(value,new IntegerType(8),curBlock);
+        new Store(target,address,curBlock);
+    }
 
+    private Value getAddress(ASTNode node){
+        if(node instanceof IdentifierExprNode){
+            return cScope.fetchValue(((IdentifierExprNode) node).identifier);
+        }else if(node instanceof ObjectMemberExprNode){
+            // todo :
+            return null;
+        }else throw new RuntimeException("[Debug] Address get fault. ");
+    }
 
+    private IRBuilder.Operator translateOp(BinaryExprNode.Op origin){
+        switch (origin){
+            case ADD -> {return Operator.add;}
+            case SUB -> {return Operator.sub;}
+            case MUL -> {return Operator.mul;}
+            case DIV -> {return Operator.sdiv;}
+            case MOD -> {return Operator.srem;}
+            case SHL -> {return Operator.shl;}
+            case SHR -> {return Operator.ashr;}
+            case AND -> {return Operator.and;}
+            case XOR -> {return Operator.xor;}
+            case OR -> {return Operator.or;}
+            case LAND -> {return Operator.logic_and;}
+            case LOR -> {return Operator.logic_or;}
+            case GT -> {return Operator.sgt;}
+            case LT-> {return Operator.slt;}
+            case GE -> {return Operator.sge;}
+            case LE -> {return Operator.sle;}
+            case EQ -> {return Operator.eq;}
+            case NE -> {return Operator.ne;}
+            case ASSIGN -> {return Operator.assign;}
+            default -> throw new RuntimeException("[Debug] Unknown operator.");
+        }
+    }
+
+    private IRConstant calculateConstant(IRBuilder.Operator op, IRConstant rs1, IRConstant rs2){
+        assert rs1.type.isEqual(rs2.type);
+        IRConstant returnValue = null;
+        switch (op) {
+            case add, sub, mul, sdiv, srem, shl, ashr, and, or, xor, logic_and, logic_or -> {
+                if (rs1 instanceof IntConstant) {
+                    int value1 = ((IntConstant) rs1).value;
+                    int value2 = ((IntConstant) rs2).value;
+                    int result;
+                    switch (op) {
+                        case add -> result = (value1 + value2);
+                        case sub -> result = (value1 - value2);
+                        case mul -> result = (value1 * value2);
+                        case sdiv -> result = (value1 / value2);
+                        case srem -> result = (value1 % value2);
+                        case and -> result = (value1 & value2);
+                        case or -> result = (value1 | value2);
+                        case xor -> result = (value1 ^ value2);
+                        case shl -> result = (value1 << value2);
+                        case ashr -> result = (value1 >> value2);
+                        default -> throw new RuntimeException("[Debug] Unknown Op.");
+                    }
+                    returnValue = new IntConstant(result);
+                } else {
+                    boolean value1 = ((BoolConstant) rs1).value;
+                    boolean value2 = ((BoolConstant) rs2).value;
+                    boolean result;
+                    switch (op) {
+                        case logic_and -> result = (value1 && value2);
+                        case logic_or -> result = (value1 || value2);
+                        default -> throw new RuntimeException("[Debug] Unknown Op.");
+                    }
+                    returnValue = new BoolConstant(result);
+                }
+            }
+            case eq, ne, sgt, sge, slt, sle -> {
+                boolean result;
+                if(rs1 instanceof IntConstant){
+                    int value1 = ((IntConstant) rs1).value;
+                    int value2 = ((IntConstant) rs2).value;
+                    switch (op) {
+                        case eq -> result = (value1 == value2);
+                        case ne -> result = (value1 != value2);
+                        case sge -> result = (value1 >= value2);
+                        case sgt -> result = (value1 > value2);
+                        case sle -> result = (value1 <= value2);
+                        case slt -> result = (value1 < value2);
+                        default -> throw new RuntimeException("[Debug] Unknown Op.");
+                    }
+                }else{
+                    boolean value1 = ((BoolConstant) rs1).value;
+                    boolean value2 = ((BoolConstant) rs2).value;
+                    switch (op) {
+                        case eq -> result = (value1 == value2);
+                        case ne -> result = (value1 != value2);
+                        default -> throw new RuntimeException("[Debug] Unknown Op.");
+                    }
+                }
+                returnValue = new BoolConstant(result);
+            }
+            default -> throw new RuntimeException("[Debug] Unknown op .");
+        }
+        return returnValue;
+    }
+
+    private Value shortCircuit(Operator op, BinaryExprNode node, Value tmpRs1){
+        Value tmpAddress = this.stackAlloc(op.toString(),new IntegerType(1));
+        IRBasicBlock dBlock = new IRBasicBlock("_dBlock",curFunction);  // direct
+        IRBasicBlock sBlock = new IRBasicBlock("_sBlock",curFunction);  // second
+        IRBasicBlock tBlock = new IRBasicBlock("_tBlock",curFunction);  // terminal
+        switch(op){
+            case logic_and -> new Branch(curBlock,tmpRs1,sBlock,dBlock);
+            case logic_or -> new Branch(curBlock,tmpRs1,dBlock,sBlock);
+        }
+        this.curBlock = dBlock;
+        this.memoryStore(tmpRs1,tmpAddress); new Branch(curBlock,tBlock);
+        this.curBlock = sBlock;
+        node.ROperand.accept(this); Value tmpRs2 = node.ROperand.IRoperand;
+        this.memoryStore(tmpRs2,tmpAddress); new Branch(curBlock,tBlock);
+        this.curBlock = tBlock;
+        return this.memoryLoad("circuit",tmpAddress,false);
+    }
 }

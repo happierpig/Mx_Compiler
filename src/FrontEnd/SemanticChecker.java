@@ -77,6 +77,7 @@ public class SemanticChecker implements ASTVisitor{
         if(node.parameterList != null) node.parameterList.forEach(tmp->tmp.accept(this));
         if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(tmp->tmp.accept(this));
         if(node.funcType != null && !node.funcType.isEqual(TypeVoid) && !node.identifier.equals("main") && !node.hasReturn) throw new SemanticError("Lack of Return Statement in " + node.identifier,node.getPos());
+        if(node.identifier.equals("main") && !node.hasReturn) node.funcBody.stmtList.add(new ReturnStmtNode(new IntConstantExprNode(0,new Position(-1,-1)),new Position(-1,-1)));
         FuncStation.pop();
         cScope = cScope.parent;
     }
