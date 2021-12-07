@@ -9,6 +9,8 @@ import IR.Instruction.*;
 import IR.Operand.*;
 import IR.TypeSystem.*;
 import Utils.GlobalScope;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -100,6 +102,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(VarDefNode node) {
         if(!cScope.isValid()) return;
         IRType valueTy = typeTable.get(node.varType.typeId);
+        if(node.varType instanceof ArrayTypeNode) valueTy = new PointerType(valueTy,((ArrayTypeNode) node.varType).dimSize);
         Value value;
         if(cScope.parent == null){ // Global definition
             value = new GlobalDef(node.identifier,valueTy);
@@ -110,14 +113,19 @@ public class IRBuilder implements ASTVisitor {
         if(node.initValue != null){ // init
             if(cScope.parent != null){ // local variable
                 node.initValue.accept(this);
-                Value initValue;
-                if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(valueTy);
-                if (node.initValue.IRoperand instanceof StringConstant) {
-                    initValue = new Gep(new PointerType(new IntegerType(8)), node.initValue.IRoperand, curBlock);
+                Value initValue = node.initValue.IRoperand;
+                if(initValue instanceof NullConstant) ((NullConstant) initValue).setType(valueTy);
+                if (initValue instanceof StringConstant) {
+                    initValue = new Gep(new PointerType(new IntegerType(8)), initValue, curBlock);
                     ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
-                }else initValue = node.initValue.IRoperand;
+                }
                 this.memoryStore(initValue,value);
             }else globalInit.add(node);
+        }else{
+            if(node.varType instanceof ArrayTypeNode) {
+                if (cScope.parent != null) this.memoryStore(new NullConstant((PointerType) valueTy), value);
+                else globalInit.add(node);
+            }
         }
     }
 
@@ -401,12 +409,20 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(ArrayAccessExprNode node) {
-
+    public void visit(NewExprNode node) {
+        if(!cScope.isValid()) return;
+        Value newOperand = null;
+        if(node.isArray()){
+            LinkedList<ExprNode> initList = new LinkedList<>(node.SizeList);
+            newOperand = recursiveNew(initList,new PointerType(typeTable.get(node.newType.typeId),node.DimSize));
+        }else{
+            //todo : new class object
+        }
+        node.IRoperand = newOperand;
     }
 
     @Override
-    public void visit(NewExprNode node) {
+    public void visit(ArrayAccessExprNode node) {
 
     }
 
@@ -459,7 +475,14 @@ public class IRBuilder implements ASTVisitor {
         return new Alloc(identifier,_ty,curBlock);
     }
 
-
+    private Value heapAlloc(IRType targetType, Value byteSize){
+        IRFunction malloc = funcTable.get("_malloc");
+        Value returnValue = new Call(malloc,curBlock);
+        ((Call)returnValue).addArg(byteSize);
+        malloc.setUsed();
+        if(!targetType.isEqual(returnValue.type)) returnValue = new Bitcast(returnValue,targetType,curBlock);
+        return returnValue;
+    }
 
     private Value memoryLoad(String identifier, Value address, boolean mode){ //mode true for bool-load
         Value tmp = new Load(identifier,address,curBlock);
@@ -596,6 +619,8 @@ public class IRBuilder implements ASTVisitor {
         IRFunction entryFunction = new IRFunction("_GLOBAL_",tempType);
         IRBasicBlock mainBody = new IRBasicBlock(entryFunction.name,entryFunction);
         this.globalInit.forEach(node->{
+            IRType valueTy = typeTable.get(node.varType.typeId);
+            if(node.varType instanceof ArrayTypeNode) valueTy = new PointerType(valueTy,((ArrayTypeNode) node.varType).dimSize);
             IRFunction nowFunction = new IRFunction("_global_var_init",tempType);
             Value address = cScope.fetchValue(node.identifier);
             this.curFunction = nowFunction;
@@ -603,12 +628,16 @@ public class IRBuilder implements ASTVisitor {
             IRBasicBlock tmpExit = new IRBasicBlock(node.identifier,curFunction); // exit-Block
             new Ret(new Value("Anonymous",new VoidType()),tmpExit);
             Value initValue;
-            node.initValue.accept(this);
-            if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(typeTable.get(node.varType.typeId));
-            if (node.initValue.IRoperand instanceof StringConstant) {
-                initValue = new Gep(new PointerType(new IntegerType(8)), node.initValue.IRoperand, curBlock);
+            if(node.initValue == null) initValue = new NullConstant();
+            else{
+                node.initValue.accept(this);
+                initValue = node.initValue.IRoperand;
+            }
+            if(initValue instanceof NullConstant) ((NullConstant) initValue).setType(valueTy);
+            if (initValue instanceof StringConstant) {
+                initValue = new Gep(new PointerType(new IntegerType(8)), initValue, curBlock);
                 ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
-            }else initValue = node.initValue.IRoperand;
+            }
             this.memoryStore(initValue,address);
             new Branch(curBlock,tmpExit);
             this.targetModule.addGlobalInit(curFunction);
@@ -624,5 +653,44 @@ public class IRBuilder implements ASTVisitor {
 
     private void popStack(){
         loopContinue.pop(); loopBreak.pop();
+    }
+
+    private Value recursiveNew(LinkedList<ExprNode> initList, IRType targetType){
+        IRType elementType = targetType.dePointed();
+        // get element number
+        initList.getFirst().accept(this);
+        Value elementNumber = initList.getFirst().IRoperand;
+        initList.removeFirst();
+        // calculate total byte size (including array size)
+        Value elementByteSize = new Binary(Operator.mul,elementNumber,new IntConstant(elementType.byteSize()),curBlock);
+        Value totalByteSize = new Binary(Operator.add,elementByteSize,new IntConstant(4),curBlock);
+        // malloc
+        Value i32Pointer = heapAlloc(new PointerType(new IntegerType(32)),totalByteSize);
+        // store elementNumber
+        this.memoryStore(elementNumber,i32Pointer);
+        Gep biasPointer = new Gep(new PointerType(new IntegerType(32)),i32Pointer,curBlock);
+        biasPointer.addIndex(new IntConstant(1));
+        Value realPointer = new Bitcast(biasPointer,targetType,curBlock);
+        if(initList.size() == 0) return realPointer;
+        // enrolling for into IR; while(nowPtr != elementNumber){ /  enrolling  / + nowPtr++}
+        Value ptrAddress = this.stackAlloc("array_ptr",new IntegerType(32));
+        this.memoryStore(new IntConstant(0),ptrAddress);
+        IRBasicBlock condition = new IRBasicBlock("array_new_condition",curFunction);
+        IRBasicBlock loopBody = new IRBasicBlock("array_new_body",curFunction);
+        IRBasicBlock termBlock = new IRBasicBlock(curFunction.name,curFunction);
+        new Branch(curBlock,condition);
+        curBlock = condition;
+        Value ptr = this.memoryLoad("array_ptr",ptrAddress,false);
+        Value flag = new Icmp(Operator.ne,ptr,elementNumber,curBlock);
+        new Branch(curBlock,flag,loopBody,termBlock);
+        curBlock = loopBody;
+        Gep elementPtr = new Gep(targetType,realPointer,curBlock);
+        elementPtr.addIndex(ptr);
+        Value element = recursiveNew(initList,elementType);
+        this.memoryStore(element,elementPtr);
+        this.memoryStore(new Binary(Operator.add,ptr,new IntConstant(1),curBlock),ptrAddress);
+        new Branch(curBlock,condition);
+        curBlock = termBlock;
+        return realPointer;
     }
 }
