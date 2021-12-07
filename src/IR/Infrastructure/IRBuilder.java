@@ -144,6 +144,7 @@ public class IRBuilder implements ASTVisitor {
             func = null;
         }
         if(node.AryList != null) node.AryList.forEach(tmp-> tmp.accept(this));
+        assert func != null;
         Call newOperand = new Call(func,curBlock);
         if(node.AryList != null) node.AryList.forEach(tmp->newOperand.addArg(tmp.IRoperand));
         if(func.isBuiltin) func.setUsed();
@@ -249,10 +250,12 @@ public class IRBuilder implements ASTVisitor {
                 node.IRoperand = newOperand;
             } else {
                 Value _address = getAddress(node.LOperand);
+                Value assignValue = tmpRs2;
                 assert _address != null;
                 if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(_address.type.dePointed());
-                this.memoryStore(tmpRs2, _address);
-                node.IRoperand = tmpRs2;
+                if (tmpRs2 instanceof StringConstant) assignValue = new Gep(tmpRs2.name, tmpRs2, 0, curBlock);
+                this.memoryStore(assignValue, _address);
+                node.IRoperand = assignValue;
             }
         }
     }

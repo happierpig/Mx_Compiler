@@ -31,14 +31,10 @@ public class Value{
     public String renaming(String _name){
         if(_name.equals("_f_main")) return "main";
         Integer count = renamingMachine.get(_name);
-        if(count == null){
-            count = 0;
-            renamingMachine.put(_name,count);
-        }else{
-            count++;
-            renamingMachine.put(_name,count);
-        }
-        return _name + count;
+        if(count == null) count = 0;
+        else count++;
+        renamingMachine.put(_name,count);
+        return (count == 0) ? _name : _name + count;
     }
 
     public static void refresh(){
