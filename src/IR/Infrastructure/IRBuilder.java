@@ -11,6 +11,7 @@ import IR.TypeSystem.*;
 import Utils.GlobalScope;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
     public IRModule targetModule;
@@ -23,15 +24,20 @@ public class IRBuilder implements ASTVisitor {
     public IRFunction curFunction;
     public enum Operator{add, sub, mul, sdiv, srem, shl, ashr, and, or, xor, logic_and, logic_or, eq, ne, sgt, sge, slt, sle, assign}
 
+    private Stack<IRBasicBlock> loopContinue;
+    private Stack<IRBasicBlock> loopBreak;
+
     public IRBuilder(IRModule _module, GlobalScope _gScope){
         this.targetModule = _module;
         this.gScope = _gScope;
-        this.cScope = new IRScope(null);
+        this.cScope = new IRScope(null, IRScope.scopeType.Global);
         this.typeTable = new HashMap<>();
         this.funcTable = new HashMap<>();
         this.globalInit = new LinkedList<>();
         this.curBlock = null;
         this.curFunction = null;
+        loopContinue = new Stack<>(); loopBreak = new Stack<>();
+
         gScope.Class_Table.forEach((className,classScope)->{
             switch (className) {
                 case "int" -> typeTable.put("int", new IntegerType(32));
@@ -65,17 +71,20 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(IntConstantExprNode node) {
+        if(!cScope.isValid()) return;
         node.IRoperand = new IntConstant(node.value);
     }
 
     @Override
     public void visit(BoolConstantExprNode node) {
+        if(!cScope.isValid()) return;
         node.IRoperand = new BoolConstant(node.value);
     }
 
     @Override
     public void visit(StringConstantExprNode node) {
         //todo : check repeated constant declaration
+        if(!cScope.isValid()) return;
         StringConstant stringLiteral = new StringConstant(processRaw(node.value));
         targetModule.addString(stringLiteral);
         node.IRoperand = stringLiteral;
@@ -83,11 +92,13 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(NullConstantExprNode node) {
+        if(!cScope.isValid()) return;
         node.IRoperand = new NullConstant();
     }
 
     @Override
     public void visit(VarDefNode node) {
+        if(!cScope.isValid()) return;
         IRType valueTy = typeTable.get(node.varType.typeId);
         Value value;
         if(cScope.parent == null){ // Global definition
@@ -111,17 +122,20 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(VarDefStmtNode node) {
+        if(!cScope.isValid()) return;
         node.elements.forEach(tmp->tmp.accept(this));
     }
 
     @Override
     public void visit(IdentifierExprNode node) {
         // visit id Node means load it in; So function call should not travel in this node :)
+        if(!cScope.isValid()) return;
         node.IRoperand = memoryLoad(node.identifier,cScope.fetchValue(node.identifier),node.exprType.typeId.equals("bool"));
     }
 
     @Override
     public void visit(FuncCallExprNode node) {
+        if(!cScope.isValid()) return;
         IRFunction func;
         if(node.Func instanceof IdentifierExprNode){
             func = funcTable.get(((IdentifierExprNode)node.Func).identifier);
@@ -138,6 +152,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ReturnStmtNode node) {
+        if(!cScope.isValid()) return;
         if(node.returnVal != null){
             Value returnValue;
             node.returnVal.accept(this);
@@ -145,14 +160,13 @@ public class IRBuilder implements ASTVisitor {
             this.memoryStore(returnValue,curFunction.returnAddress);
         }
         new Branch(curBlock,curFunction.exitBlock());
-        // todo : add something to complete Return
-        curBlock = null;
+        cScope.setInvalid();
     }
 
     @Override
     public void visit(FuncDefNode node) {
         curFunction = funcTable.get(node.identifier);
-        cScope = new IRScope(cScope);
+        cScope = new IRScope(cScope, IRScope.scopeType.Func);
         Value.refresh();
         IRBasicBlock tmpEntry = new IRBasicBlock(curFunction.name,curFunction); // entry-Block
         IRBasicBlock tmpExit = new IRBasicBlock(curFunction.name,curFunction); // exit-Block
@@ -176,16 +190,18 @@ public class IRBuilder implements ASTVisitor {
         });
 
         curBlock = null;
-        cScope = cScope.parent;
+        cScope = cScope.upRoot();
     }
 
     @Override
     public void visit(ExprStmtNode node) {
+        if(!cScope.isValid()) return;
         node.expr.accept(this);
     }
 
     @Override
     public void visit(BinaryExprNode node) {
+        if(!cScope.isValid()) return;
         IRBuilder.Operator op = translateOp(node.operator);
         if(op == Operator.logic_and || op == Operator.logic_or){
             Value newOperand = null;
@@ -244,6 +260,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(MonoExprNode node) {
         // Class Node todo
+        if(!cScope.isValid()) return;
         node.operand.accept(this);
         Value originValue = node.operand.IRoperand;
         Value newOperand = originValue;
@@ -283,15 +300,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(BlockStmtNode node) {
-        cScope = new IRScope(cScope);
+        if(!cScope.isValid()) return;
+        cScope = new IRScope(cScope, IRScope.scopeType.Common);
         if(node.stmtList != null) node.stmtList.forEach(tmp->tmp.accept(this));
-        cScope = cScope.parent;
+        cScope = cScope.upRoot();
     }
 
     @Override
     public void visit(IfStmtNode node) {
+        if(!cScope.isValid()) return;
         node.IRoperand = null;
-        cScope = new IRScope(cScope);
+        cScope = new IRScope(cScope, IRScope.scopeType.Flow);
         IRBasicBlock thenBlock = new IRBasicBlock("if_then",curFunction);
         IRBasicBlock termBlock = new IRBasicBlock(curFunction.name,curFunction);
         node.condition.accept(this);
@@ -304,20 +323,21 @@ public class IRBuilder implements ASTVisitor {
         }else new Branch(curBlock,node.condition.IRoperand,thenBlock,termBlock);
         curBlock = thenBlock;
         node.thenCode.accept(this);
-        // todo :debug
         new Branch(curBlock,termBlock);
         curBlock = termBlock;
-        cScope = cScope.parent;
+        cScope = cScope.upRoot();
     }
 
     @Override
     public void visit(WhileStmtNode node) {
         // todo : add break / continue
+        if(!cScope.isValid()) return;
         node.IRoperand = null;
-        cScope = new IRScope(cScope);
+        cScope = new IRScope(cScope, IRScope.scopeType.Flow);
         IRBasicBlock condition = new IRBasicBlock("while_condition",curFunction);
         IRBasicBlock loopBody = new IRBasicBlock("while_body",curFunction);
         IRBasicBlock termBlock = new IRBasicBlock(curFunction.name,curFunction);
+        this.pushStack(condition,termBlock);
         new Branch(curBlock,condition);
         curBlock = condition;
         node.condition.accept(this);
@@ -326,19 +346,22 @@ public class IRBuilder implements ASTVisitor {
         node.loopBody.accept(this);
         new Branch(curBlock,condition);
         curBlock = termBlock;
-        cScope = cScope.parent;
+        this.popStack();
+        cScope = cScope.upRoot();
     }
 
     @Override
     public void visit(ForStmtNode node) {
         // todo : none-condition situation && add break / continue
+        if(!cScope.isValid()) return;
         node.IRoperand = null;
-        cScope = new IRScope(cScope);
+        cScope = new IRScope(cScope, IRScope.scopeType.Flow);
         if(node.init != null) node.init.accept(this);
         IRBasicBlock condition = new IRBasicBlock("for_condition",curFunction);
         IRBasicBlock iter = new IRBasicBlock("for_iter",curFunction);
         IRBasicBlock loopBody = new IRBasicBlock("for_body",curFunction);
         IRBasicBlock termBody = new IRBasicBlock(curFunction.name,curFunction);
+        this.pushStack(iter,termBody);
         new Branch(curBlock,condition);
         curBlock = condition;
         if(node.condition != null){
@@ -352,7 +375,22 @@ public class IRBuilder implements ASTVisitor {
         if(node.iteration != null) node.iteration.accept(this);
         new Branch(curBlock,condition);
         curBlock = termBody;
-        cScope = cScope.parent;
+        this.popStack();
+        cScope = cScope.upRoot();
+    }
+
+    @Override
+    public void visit(BreakStmtNode Node) {
+        if(!cScope.isValid()) return;
+        new Branch(curBlock,loopBreak.peek());
+        cScope.setInvalid();
+    }
+
+    @Override
+    public void visit(ContinueStmtNode node) {
+        if(!cScope.isValid()) return;
+        new Branch(curBlock,loopContinue.peek());
+        cScope.setInvalid();
     }
 
     @Override
@@ -366,17 +404,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(BreakStmtNode Node) {
-
-    }
-
-    @Override
     public void visit(ClassDefNode Node) {
-
-    }
-
-    @Override
-    public void visit(ContinueStmtNode node) {
 
     }
 
@@ -578,5 +606,13 @@ public class IRBuilder implements ASTVisitor {
         });
         new Ret(new Value("Anonymous",new VoidType()),mainBody);
         this.targetModule.addGlobalInit(entryFunction);
+    }
+
+    private void pushStack(IRBasicBlock cBlock, IRBasicBlock bBlock){
+        loopContinue.push(cBlock); loopBreak.push(bBlock);
+    }
+
+    private void popStack(){
+        loopContinue.pop(); loopBreak.pop();
     }
 }

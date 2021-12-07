@@ -26,8 +26,8 @@ public class IRBasicBlock extends Value {
     }
 
     public void setTerminator(IRInstruction _terminator){
-        if(this.terminator != null) throw new RuntimeException("[Debug] duplicate set terminator.");
-        this.terminator = _terminator;
+        if(this.terminator == null) this.terminator = _terminator;
+        // Attention : maybe cause bug
     }
 
     @Override
