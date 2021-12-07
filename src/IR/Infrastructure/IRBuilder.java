@@ -113,7 +113,8 @@ public class IRBuilder implements ASTVisitor {
                 Value initValue;
                 if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(valueTy);
                 if (node.initValue.IRoperand instanceof StringConstant) {
-                    initValue = new Gep(node.identifier, node.initValue.IRoperand, 0, curBlock);
+                    initValue = new Gep(new PointerType(new IntegerType(8)), node.initValue.IRoperand, curBlock);
+                    ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
                 }else initValue = node.initValue.IRoperand;
                 this.memoryStore(initValue,value);
             }else globalInit.add(node);
@@ -253,7 +254,10 @@ public class IRBuilder implements ASTVisitor {
                 Value assignValue = tmpRs2;
                 assert _address != null;
                 if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(_address.type.dePointed());
-                if (tmpRs2 instanceof StringConstant) assignValue = new Gep(tmpRs2.name, tmpRs2, 0, curBlock);
+                if (tmpRs2 instanceof StringConstant){
+                    assignValue = new Gep(new PointerType(new IntegerType(8)),tmpRs2, curBlock);
+                    ((Gep) assignValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
+                }
                 this.memoryStore(assignValue, _address);
                 node.IRoperand = assignValue;
             }
@@ -262,7 +266,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(MonoExprNode node) {
-        // Class Node todo
+        // todo :Class Node
         if(!cScope.isValid()) return;
         node.operand.accept(this);
         Value originValue = node.operand.IRoperand;
@@ -355,7 +359,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ForStmtNode node) {
-        // todo : none-condition situation && add break / continue
+        // todo : none-condition situation
         if(!cScope.isValid()) return;
         node.IRoperand = null;
         cScope = new IRScope(cScope, IRScope.scopeType.Flow);
@@ -454,6 +458,8 @@ public class IRBuilder implements ASTVisitor {
     private Alloc stackAlloc(String identifier, IRType _ty){
         return new Alloc(identifier,_ty,curBlock);
     }
+
+
 
     private Value memoryLoad(String identifier, Value address, boolean mode){ //mode true for bool-load
         Value tmp = new Load(identifier,address,curBlock);
@@ -600,7 +606,8 @@ public class IRBuilder implements ASTVisitor {
             node.initValue.accept(this);
             if(node.initValue.IRoperand instanceof NullConstant) ((NullConstant) node.initValue.IRoperand).setType(typeTable.get(node.varType.typeId));
             if (node.initValue.IRoperand instanceof StringConstant) {
-                initValue = new Gep(node.identifier, node.initValue.IRoperand, 0, curBlock);
+                initValue = new Gep(new PointerType(new IntegerType(8)), node.initValue.IRoperand, curBlock);
+                ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
             }else initValue = node.initValue.IRoperand;
             this.memoryStore(initValue,address);
             new Branch(curBlock,tmpExit);

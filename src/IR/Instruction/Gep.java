@@ -7,17 +7,24 @@ import IR.TypeSystem.IRType;
 import IR.TypeSystem.PointerType;
 
 public class Gep extends IRInstruction{
-    public int index;
 
-    public Gep(String _name, Value _value, int _index, IRBasicBlock _block) {
-        super(_name+"_gep", new PointerType(((ArrayType)_value.type.dePointed()).baseType), _block);
+    public Gep(IRType targetType, Value calculatedPointer, IRBasicBlock _block) {
+        super("gep", targetType, _block);
+        this.addOperand(calculatedPointer);
+    }
+
+    public Gep addIndex(Value _value){
         this.addOperand(_value);
-        this.index = _index;
+        return this;
     }
 
     @Override
     public String toString() {
-        return this.getName() + " = getelementptr inbounds " + this.getOperand(0).type.dePointed().toString()
-                + ", " + this.getOperand(0).getTypeName() + ", i32 0, i32 " + index;
+        StringBuilder raw = new StringBuilder();
+        raw.append(this.getName()).append(" = getelementptr inbounds ").append(getOperand(0).type.dePointed().toString())
+                .append(", ").append(getOperand(0).getTypeName());
+        assert this.operands.size() > 1;
+        for(int i = 1;i < operands.size();++i) raw.append(", ").append(getOperand(i).getTypeName());
+        return raw.toString();
     }
 }

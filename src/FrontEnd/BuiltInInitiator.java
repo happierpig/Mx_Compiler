@@ -41,6 +41,11 @@ public class BuiltInInitiator{
         tmp.isBuiltin = true;
         initScope.define_Function("toString",tmp);
 
+        // named for _malloc so that user can not call this function
+        tmp = new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"_malloc",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_malloc",tmp);
+
         //built-in class
         initScope.define_Class("bool",new GlobalScope(initScope));
         initScope.define_Class("int",new GlobalScope(initScope));
