@@ -596,7 +596,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value shortCircuit(Operator op, BinaryExprNode node, Value tmpRs1){
-        Value tmpAddress = this.stackAlloc(op.toString(),new IntegerType(1));
+        Value tmpAddress = this.stackAlloc(op.toString(),new IntegerType(8));
         IRBasicBlock dBlock = new IRBasicBlock("_dBlock",curFunction);  // direct
         IRBasicBlock sBlock = new IRBasicBlock("_sBlock",curFunction);  // second
         IRBasicBlock tBlock = new IRBasicBlock("_tBlock",curFunction);  // terminal
@@ -610,7 +610,7 @@ public class IRBuilder implements ASTVisitor {
         node.ROperand.accept(this); Value tmpRs2 = node.ROperand.IRoperand;
         this.memoryStore(tmpRs2,tmpAddress); new Branch(curBlock,tBlock);
         this.curBlock = tBlock;
-        return this.memoryLoad("circuit",tmpAddress,false);
+        return this.memoryLoad("circuit",tmpAddress,true);
     }
 
     public void processGlobalInit(){

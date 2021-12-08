@@ -22,7 +22,7 @@ public class Store extends IRInstruction{
     @Override
     public String toString() {
         if(this.getOperand(0) instanceof BoolConstant) return "store i8 " + (((BoolConstant) this.getOperand(0)).value ? 1 : 0)
-                + ", " + this.getOperand(1).getTypeName() + ", align " + this.getOperand(0).type.byteSize();
+                + ", " + this.getOperand(1).getTypeName() + ", align 1";
         else return "store " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getTypeName() + ", align " + this.getOperand(0).type.byteSize();
     }
 }
