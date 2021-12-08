@@ -423,7 +423,9 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ArrayAccessExprNode node) {
-
+        if(!cScope.isValid()) return;
+        Value address = getAddress(node);
+        node.IRoperand = this.memoryLoad("_array",address,node.exprType.typeId.equals("bool") && (!(node.exprType instanceof ArrayTypeNode)));
     }
 
     @Override
@@ -500,8 +502,15 @@ public class IRBuilder implements ASTVisitor {
         if(node instanceof IdentifierExprNode){
             return cScope.fetchValue(((IdentifierExprNode) node).identifier);
         }else if(node instanceof ObjectMemberExprNode){
-            // todo :
+            // todo : class
             return null;
+        }else if(node instanceof ArrayAccessExprNode){
+            Value ptrAddress = getAddress(((ArrayAccessExprNode) node).array);
+            Value address = memoryLoad("_array",ptrAddress,false);
+            ((ArrayAccessExprNode) node).index.accept(this);
+            Gep biasAddress = new Gep(address.type, address, curBlock);
+            biasAddress.addIndex(((ArrayAccessExprNode) node).index.IRoperand);
+            return biasAddress;
         }else throw new RuntimeException("[Debug] Address get fault. ");
     }
 
