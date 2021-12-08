@@ -9,8 +9,6 @@ import IR.Instruction.*;
 import IR.Operand.*;
 import IR.TypeSystem.*;
 import Utils.GlobalScope;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -87,7 +85,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(StringConstantExprNode node) {
         //todo : check repeated constant declaration
         if(!cScope.isValid()) return;
-        StringConstant stringLiteral = new StringConstant(processRaw(node.value));
+        StringConstant stringLiteral = new StringConstant(node.value);
         targetModule.addString(stringLiteral);
         node.IRoperand = stringLiteral;
     }
@@ -152,10 +150,19 @@ public class IRBuilder implements ASTVisitor {
             // todo : class function call
             func = null;
         }
-        if(node.AryList != null) node.AryList.forEach(tmp-> tmp.accept(this));
+        if(node.AryList != null) node.AryList.forEach(tmp->{
+            tmp.accept(this);
+            Value tmpArg = tmp.IRoperand;
+            // may cause bugs
+            if(tmpArg instanceof StringConstant){
+                tmpArg = new Gep(new PointerType(new IntegerType(8)),tmpArg,curBlock);
+                ((Gep) tmpArg).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));;
+            }
+            tmp.IRoperand = tmpArg;
+        });
         assert func != null;
         Call newOperand = new Call(func,curBlock);
-        if(node.AryList != null) node.AryList.forEach(tmp->newOperand.addArg(tmp.IRoperand));
+        if(node.AryList != null) node.AryList.forEach(tmp-> newOperand.addArg(tmp.IRoperand));
         if(func.isBuiltin) func.setUsed();
         node.IRoperand = newOperand;
     }
@@ -462,15 +469,6 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(ArrayTypeNode node) {
 
-    }
-
-    private String processRaw(String raw){
-        return raw
-                .substring(1,raw.length()-1)
-                .replace("\\", "\\5C")
-                .replace("\n", "\\0A")
-                .replace("\"", "\\22")
-                .replace("\t", "\\09");
     }
 
     private Alloc stackAlloc(String identifier, IRType _ty){

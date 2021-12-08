@@ -9,8 +9,8 @@ public class StringConstant extends IRConstant{
 
     // string after processing
     public StringConstant(String _value){
-        super("_str",new PointerType(new ArrayType(new IntegerType(8), _value.length()+1)));
-        this.value = _value + "\\00";
+        super("_str",new PointerType(new ArrayType(new IntegerType(8), _value.length())));
+        this.value = _value;
     }
 
     @Override
@@ -20,6 +20,15 @@ public class StringConstant extends IRConstant{
 
     @Override
     public String toString() {
-        return this.getName() + " = private unnamed_addr constant " + ((PointerType)this.type).baseType.toString() + " c\"" + this.value + "\", align 1";
+        return this.getName() + " = private unnamed_addr constant " + ((PointerType)this.type).baseType.toString() + " c\"" + processRaw(this.value) + "\", align 1";
+    }
+
+    private String processRaw(String raw){
+        return raw
+                .replace("\\", "\\5C")
+                .replace("\n", "\\0A")
+                .replace("\"", "\\22")
+                .replace("\t", "\\09")
+                .replace("\0","\\00");
     }
 }
