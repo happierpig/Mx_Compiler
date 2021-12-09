@@ -2,6 +2,7 @@ package IR.Instruction;
 
 import IR.BaseClass.Value;
 import IR.IRBasicBlock;
+import IR.TypeSystem.IntegerType;
 import IR.TypeSystem.VoidType;
 
 public class Branch extends IRInstruction{
@@ -13,6 +14,7 @@ public class Branch extends IRInstruction{
 
     public Branch(IRBasicBlock _block, Value _condition, IRBasicBlock _lBlock, IRBasicBlock _rBlock){
         super("_branch", new VoidType(), _block);
+        assert _condition.type.isEqual(new IntegerType(1));
         this.addOperand(_condition);
         this.addOperand(_lBlock);
         this.addOperand(_rBlock);

@@ -9,7 +9,7 @@ public class IntegerType extends IRType{
 
     @Override
     public int byteSize() {
-        return this.width / 8;
+        return this.width == 1 ? 1 : this.width / 8;
     }
 
     @Override

@@ -5,7 +5,7 @@ import IR.TypeSystem.IntegerType;
 public class BoolConstant extends IRConstant{
     public boolean value; // 1 for True and 0 for False
 
-    // Boolean use 1 bit cause bool in use is 1 bit (while in memory is 8 bits)
+    // Boolean use 1 bit cause bool in use is 1 bit
     public BoolConstant(boolean _flag){
         super("_bool_const",new IntegerType(1));
         this.value = _flag;
