@@ -19,6 +19,7 @@ public class IRBuilder implements ASTVisitor {
     public IRScope cScope;  // symbol table storing pointer
     public HashMap<String, IRType> typeTable;
     public HashMap<String, IRFunction> funcTable;
+    public HashMap<String,StringConstant> stringTable; // avoid repeatedly global str
     public LinkedList<VarDefNode> globalInit;
     public IRBasicBlock curBlock;
     public IRFunction curFunction;
@@ -33,6 +34,7 @@ public class IRBuilder implements ASTVisitor {
         this.cScope = new IRScope(null, IRScope.scopeType.Global);
         this.typeTable = new HashMap<>();
         this.funcTable = new HashMap<>();
+        this.stringTable = new HashMap<>();
         this.globalInit = new LinkedList<>();
         this.curBlock = null;
         this.curFunction = null;
@@ -83,10 +85,13 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(StringConstantExprNode node) {
-        //todo : check repeated constant declaration
         if(!cScope.isValid()) return;
-        StringConstant stringLiteral = new StringConstant(node.value);
-        targetModule.addString(stringLiteral);
+        StringConstant stringLiteral = stringTable.get(node.value);
+        if(stringLiteral == null){
+            stringLiteral = new StringConstant(node.value);
+            targetModule.addString(stringLiteral);
+            stringTable.put(node.value,stringLiteral);
+        }
         node.IRoperand = stringLiteral;
     }
 
@@ -113,10 +118,7 @@ public class IRBuilder implements ASTVisitor {
                 node.initValue.accept(this);
                 Value initValue = node.initValue.IRoperand;
                 if(initValue instanceof NullConstant) ((NullConstant) initValue).setType(valueTy);
-                if (initValue instanceof StringConstant) {
-                    initValue = new Gep(new PointerType(new IntegerType(8)), initValue, curBlock);
-                    ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
-                }
+                if (initValue instanceof StringConstant) initValue = getStringPtr(initValue);
                 this.memoryStore(initValue,value);
             }else globalInit.add(node);
         }else{
@@ -154,10 +156,7 @@ public class IRBuilder implements ASTVisitor {
             tmp.accept(this);
             Value tmpArg = tmp.IRoperand;
             // may cause bugs
-            if(tmpArg instanceof StringConstant){
-                tmpArg = new Gep(new PointerType(new IntegerType(8)),tmpArg,curBlock);
-                ((Gep) tmpArg).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));;
-            }
+            if(tmpArg instanceof StringConstant) tmpArg = getStringPtr(tmpArg);
             tmp.IRoperand = tmpArg;
         });
         assert func != null;
@@ -203,6 +202,7 @@ public class IRBuilder implements ASTVisitor {
             cScope.setVariable(tmp.identifier,realArg);
         });
         if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(stmt-> stmt.accept(this));
+        if(curBlock.terminator == null) new Branch(curBlock, curFunction.exitBlock());
         curBlock = null;
         cScope = cScope.upRoot();
     }
@@ -247,16 +247,23 @@ public class IRBuilder implements ASTVisitor {
             if (op != Operator.assign) {
                 node.LOperand.accept(this);
                 Value tmpRs1 = node.LOperand.IRoperand; // lvalue do not need load in.
+                if(tmpRs1 instanceof StringConstant) tmpRs1 = getStringPtr(tmpRs1);
+                if(tmpRs2 instanceof StringConstant) tmpRs2 = getStringPtr(tmpRs2);
                 if (tmpRs1 instanceof IRConstant && tmpRs2 instanceof IRConstant) {
                     newOperand = calculateConstant(op, (IRConstant) tmpRs1, (IRConstant) tmpRs2);
                 } else {
-                    switch (op) {
-                        case add, sub, mul, sdiv, srem, shl, ashr, and, or, xor -> newOperand = new Binary(op, tmpRs1, tmpRs2, curBlock);
-                        case eq, ne, sgt, sge, slt, sle -> {
-                            if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(tmpRs1.type);
-                            newOperand = new Icmp(op, tmpRs1, tmpRs2, curBlock);
+                    if(tmpRs1.type.isEqual(new PointerType(new IntegerType(8)))){
+                        assert tmpRs2.type.isEqual(new PointerType(new IntegerType(8)));
+                        newOperand = callStringOperator(op,tmpRs1,tmpRs2);
+                    }else {
+                        switch (op) {
+                            case add, sub, mul, sdiv, srem, shl, ashr, and, or, xor -> newOperand = new Binary(op, tmpRs1, tmpRs2, curBlock);
+                            case eq, ne, sgt, sge, slt, sle -> {
+                                if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(tmpRs1.type);
+                                newOperand = new Icmp(op, tmpRs1, tmpRs2, curBlock);
+                            }
+                            default -> throw new RuntimeException("[Debug] Unknown Op again. :(");
                         }
-                        default -> throw new RuntimeException("[Debug] Unknown Op again. :(");
                     }
                 }
             } else {
@@ -264,10 +271,7 @@ public class IRBuilder implements ASTVisitor {
                 newOperand = tmpRs2;
                 assert _address != null;
                 if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(_address.type.dePointed());
-                if (tmpRs2 instanceof StringConstant){
-                    newOperand = new Gep(new PointerType(new IntegerType(8)),tmpRs2, curBlock);
-                    ((Gep) newOperand).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
-                }
+                if (tmpRs2 instanceof StringConstant) tmpRs2 = getStringPtr(tmpRs2);
                 this.memoryStore(newOperand, _address);
             }
         }
@@ -631,10 +635,7 @@ public class IRBuilder implements ASTVisitor {
                 initValue = node.initValue.IRoperand;
             }
             if(initValue instanceof NullConstant) ((NullConstant) initValue).setType(valueTy);
-            if (initValue instanceof StringConstant) {
-                initValue = new Gep(new PointerType(new IntegerType(8)), initValue, curBlock);
-                ((Gep) initValue).addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
-            }
+            if (initValue instanceof StringConstant) initValue = getStringPtr(initValue);
             this.memoryStore(initValue,address);
             new Branch(curBlock,tmpExit);
             this.targetModule.addGlobalInit(curFunction);
@@ -689,5 +690,31 @@ public class IRBuilder implements ASTVisitor {
         new Branch(curBlock,condition);
         curBlock = termBlock;
         return realPointer;
+    }
+
+    private Value getStringPtr(Value raw){
+        assert raw instanceof StringConstant;
+        Gep ptr = new Gep(new PointerType(new IntegerType(8)),raw,curBlock);
+        ptr.addIndex(new IntConstant(0)).addIndex(new IntConstant(0));
+        return ptr;
+    }
+
+    private Value callStringOperator(Operator op,Value str1, Value str2){
+        assert str1.type.isEqual(new PointerType(new IntegerType(8))) && str2.type.isEqual(new PointerType(new IntegerType(8)));
+        Call returnValue;
+        IRFunction calledFunction;
+        switch(op){
+            case add ->returnValue = new Call(calledFunction = funcTable.get("_str_splice"),curBlock);
+            case eq -> returnValue = new Call(calledFunction = funcTable.get("_str_eq"),curBlock);
+            case ne -> returnValue = new Call(calledFunction = funcTable.get("_str_ne"),curBlock);
+            case slt -> returnValue = new Call(calledFunction = funcTable.get("_str_lt"),curBlock);
+            case sle -> returnValue = new Call(calledFunction = funcTable.get("_str_le"),curBlock);
+            case sgt -> returnValue = new Call(calledFunction = funcTable.get("_str_gt"),curBlock);
+            case sge -> returnValue = new Call(calledFunction = funcTable.get("_str_ge"),curBlock);
+            default -> throw new RuntimeException("[Debug] Unknown operator :(");
+        }
+        calledFunction.setUsed();
+        returnValue.addArg(str1).addArg(str2);
+        return returnValue;
     }
 }

@@ -13,8 +13,9 @@ public class Call extends IRInstruction{
         this.addOperand(_func);
     }
 
-    public void addArg(Value _arg){
+    public Call addArg(Value _arg){
         this.addOperand(_arg);
+        return this;
     }
 
     @Override

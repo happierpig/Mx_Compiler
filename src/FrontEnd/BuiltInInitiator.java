@@ -46,6 +46,39 @@ public class BuiltInInitiator{
         tmp.isBuiltin = true;
         initScope.define_Function("_malloc",tmp);
 
+        // operator overload for string
+        tmp_List = new ArrayList<>();
+        tmp_List.add(new VarDefNode(new ClassTypeNode("string",new Position(-1,-1)),"str1",null,new Position(-1,-1)));
+        tmp_List.add(new VarDefNode(new ClassTypeNode("string",new Position(-1,-1)),"str2",null,new Position(-1,-1)));
+
+        tmp = new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"_str_splice",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_splice",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_eq",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_eq",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_ne",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_ne",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_lt",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_lt",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_le",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_le",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_gt",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_gt",tmp);
+
+        tmp = new FuncDefNode(new ClassTypeNode("bool",new Position(-1,-1)),"_str_ge",tmp_List,null,new Position(-1,-1));
+        tmp.isBuiltin = true;
+        initScope.define_Function("_str_ge",tmp);
+
         //built-in class
         initScope.define_Class("bool",new GlobalScope(initScope));
         initScope.define_Class("int",new GlobalScope(initScope));
