@@ -43,7 +43,7 @@ public class IRBuilder implements ASTVisitor {
         gScope.Class_Table.forEach((className,classScope)->{
             switch (className) {
                 case "int" -> typeTable.put("int", new IntegerType(32));
-                case "bool" -> typeTable.put("bool", new BoolType(false));
+                case "bool" -> typeTable.put("bool", new BoolType());
                 case "string" -> typeTable.put("string", new PointerType(new IntegerType(8)));
                 //todo add class-type:
 //                default -> typeTable.put(className,)
@@ -105,7 +105,6 @@ public class IRBuilder implements ASTVisitor {
     public void visit(VarDefNode node) {
         if(!cScope.isValid()) return;
         IRType valueTy = typeTable.get(node.varType.typeId);
-        if(valueTy instanceof BoolType) valueTy = new BoolType(true);
         if(node.varType instanceof ArrayTypeNode) valueTy = new PointerType(valueTy,((ArrayTypeNode) node.varType).dimSize);
         Value value;
         if(cScope.parent == null){ // Global definition
@@ -262,6 +261,7 @@ public class IRBuilder implements ASTVisitor {
                             case eq, ne, sgt, sge, slt, sle -> {
                                 if (tmpRs2 instanceof NullConstant) ((NullConstant) tmpRs2).setType(tmpRs1.type);
                                 newOperand = new Icmp(op, tmpRs1, tmpRs2, curBlock);
+                                newOperand = new Zext(newOperand,new BoolType(),curBlock);
                             }
                             default -> throw new RuntimeException("[Debug] Unknown Op again. :(");
                         }
@@ -313,7 +313,7 @@ public class IRBuilder implements ASTVisitor {
                     case AFTINC -> newValue = new Binary(Operator.add,originValue,new IntConstant(1),curBlock);
                     case AFTDEC -> newValue = new Binary(Operator.add,originValue,new IntConstant(-1),curBlock);
                 }
-                assert newValue != null;
+                assert newValue != null; assert address != null;
                 this.memoryStore(newValue,address);
             }
         }
@@ -338,11 +338,11 @@ public class IRBuilder implements ASTVisitor {
         node.condition.accept(this);
         if(node.elseCode != null){
             IRBasicBlock elseBlock = new IRBasicBlock("if_else",curFunction);
-            new Branch(curBlock,node.condition.IRoperand,thenBlock,elseBlock);
+            addControl(curBlock,node.condition.IRoperand,thenBlock,elseBlock);
             curBlock = elseBlock;
             node.elseCode.accept(this);
             new Branch(curBlock,termBlock);
-        }else new Branch(curBlock,node.condition.IRoperand,thenBlock,termBlock);
+        }else addControl(curBlock,node.condition.IRoperand,thenBlock,termBlock);
         curBlock = thenBlock;
         node.thenCode.accept(this);
         new Branch(curBlock,termBlock);
@@ -362,7 +362,7 @@ public class IRBuilder implements ASTVisitor {
         new Branch(curBlock,condition);
         curBlock = condition;
         node.condition.accept(this);
-        new Branch(curBlock,node.condition.IRoperand,loopBody,termBlock);
+         addControl(curBlock,node.condition.IRoperand,loopBody,termBlock);
         curBlock = loopBody;
         node.loopBody.accept(this);
         new Branch(curBlock,condition);
@@ -387,7 +387,7 @@ public class IRBuilder implements ASTVisitor {
         curBlock = condition;
         if(node.condition != null){
             node.condition.accept(this);
-            new Branch(curBlock,node.condition.IRoperand,loopBody,termBody);
+            addControl(curBlock,node.condition.IRoperand,loopBody,termBody);
         }else new Branch(curBlock,loopBody);
         curBlock = loopBody;
         if(node.loopBody != null) node.loopBody.accept(this);
@@ -420,9 +420,7 @@ public class IRBuilder implements ASTVisitor {
         Value newOperand = null;
         if(node.isArray()){
             LinkedList<ExprNode> initList = new LinkedList<>(node.SizeList);
-            IRType targetType = typeTable.get(node.newType.typeId);
-            if(targetType instanceof BoolType) targetType = new BoolType(true);
-            newOperand = recursiveNew(initList,new PointerType(targetType,node.DimSize));
+            newOperand = recursiveNew(initList,new PointerType(typeTable.get(node.newType.typeId),node.DimSize));
         }else{
             //todo : new class object
         }
@@ -433,6 +431,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(ArrayAccessExprNode node) {
         if(!cScope.isValid()) return;
         Value address = getAddress(node);
+        assert address != null;
         node.IRoperand = this.memoryLoad("_array",address,curBlock);
     }
 
@@ -473,7 +472,6 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Alloc stackAlloc(String identifier, IRType _ty){
-        if(_ty instanceof BoolType) _ty = new BoolType(true);
         return new Alloc(identifier,_ty,curFunction.entryBlock());
     }
 
@@ -487,19 +485,11 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value memoryLoad(String identifier, Value address, IRBasicBlock _block){
-        if(address.type.isEqual(new PointerType(new BoolType(false))))  ((PointerType)address.type).baseType = new BoolType(true);
-        Value returnValue = new Load(identifier,address,_block);
-        if(address.type.isEqual(new PointerType(new BoolType(true)))) returnValue = new Trunc(returnValue,new BoolType(false),_block);
-        return returnValue;
+        return new Load(identifier,address,_block);
     }
 
     private void memoryStore(Value value, Value address){
-        Value storeValue = value;
-        if(address.type.isEqual(new PointerType(new BoolType(false)))){
-            ((PointerType)address.type).baseType = new BoolType(true);
-            storeValue = new Zext(storeValue,new BoolType(true),curBlock);
-        }
-        new Store(storeValue,address,curBlock);
+        new Store(value,address,curBlock);
     }
 
     private Value getAddress(ASTNode node){
@@ -609,13 +599,13 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value shortCircuit(Operator op, BinaryExprNode node, Value tmpRs1){
-        Value tmpAddress = this.stackAlloc(op.toString(),new BoolType(true));
+        Value tmpAddress = this.stackAlloc(op.toString(),new BoolType());
         IRBasicBlock dBlock = new IRBasicBlock("_dBlock",curFunction);  // direct
         IRBasicBlock sBlock = new IRBasicBlock("_sBlock",curFunction);  // second
         IRBasicBlock tBlock = new IRBasicBlock("_tBlock",curFunction);  // terminal
         switch(op){
-            case logic_and -> new Branch(curBlock,tmpRs1,sBlock,dBlock);
-            case logic_or -> new Branch(curBlock,tmpRs1,dBlock,sBlock);
+            case logic_and -> addControl(curBlock,tmpRs1,sBlock,dBlock);
+            case logic_or -> addControl(curBlock,tmpRs1,dBlock,sBlock);
         }
         this.curBlock = dBlock;
         this.memoryStore(tmpRs1,tmpAddress); new Branch(curBlock,tBlock);
@@ -728,5 +718,11 @@ public class IRBuilder implements ASTVisitor {
         calledFunction.setUsed();
         returnValue.addArg(str1).addArg(str2);
         return returnValue;
+    }
+
+    private void addControl(IRBasicBlock cBlock, Value flag, IRBasicBlock tBlock, IRBasicBlock fBlock){
+        assert !flag.type.isEqual(new IntegerType(1));
+        Value _condition = new Trunc(flag,new IntegerType(1),cBlock);
+        new Branch(cBlock,_condition,tBlock,fBlock);
     }
 }
