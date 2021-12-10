@@ -6,8 +6,8 @@ import IR.TypeSystem.IRType;
 
 public class Trunc extends IRInstruction{
 
-    public Trunc(String _name, Value _origin, IRType targetTy, IRBasicBlock _block) {
-        super(_name+".trunc", targetTy, _block);
+    public Trunc(Value _origin, IRType targetTy, IRBasicBlock _block) {
+        super("trunc_", targetTy, _block);
         this.addOperand(_origin);
     }
 
