@@ -3,12 +3,8 @@ package IR.TypeSystem;
 public class BoolType extends IRType{
     public boolean inMem;
 
-    public BoolType() {
-        inMem = false;
-    }
-
-    public void setInMem(){
-        inMem = true;
+    public BoolType(boolean flag) {
+        inMem = flag;
     }
 
     @Override
@@ -23,6 +19,6 @@ public class BoolType extends IRType{
 
     @Override
     public boolean isEqual(IRType other) {
-        return (other instanceof BoolType) && (((BoolType) other).inMem == inMem);
+        return (other instanceof BoolType);
     }
 }
