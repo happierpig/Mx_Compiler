@@ -45,8 +45,7 @@ public class IRBuilder implements ASTVisitor {
                 case "int" -> typeTable.put("int", new IntegerType(32));
                 case "bool" -> typeTable.put("bool", new BoolType());
                 case "string" -> typeTable.put("string", new PointerType(new IntegerType(8)));
-                //todo add class-type:
-//                default -> typeTable.put(className,)
+                default -> typeTable.put(className,new StructType(className));
             }
         });
         typeTable.put("void",new VoidType());
@@ -62,8 +61,6 @@ public class IRBuilder implements ASTVisitor {
             funcTable.put(funcName,_func);
             targetModule.addFunction(_func);
         });
-
-        //todo : collect Class information
     }
 
     @Override
