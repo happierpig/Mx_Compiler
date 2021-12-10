@@ -83,14 +83,14 @@ public class BuiltInInitiator{
         initScope.define_Class("bool",new GlobalScope(initScope));
         initScope.define_Class("int",new GlobalScope(initScope));
         GlobalScope class_tmp = new GlobalScope(initScope); tmp_List = new ArrayList<>();
-        class_tmp.define_Function("length",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"length",null,null,new Position(-1,-1)));
+        class_tmp.define_Function("length",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"length",null,null,new Position(-1,-1)).setBuiltin());
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"left",null,new Position(-1,-1)));
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"right",null,new Position(-1,-1)));
-        class_tmp.define_Function("substring",new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"substring",tmp_List,null,new Position(-1,-1)));
-        class_tmp.define_Function("parseInt",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"parseInt",null,null,new Position(-1,-1)));
+        class_tmp.define_Function("substring",new FuncDefNode(new ClassTypeNode("string",new Position(-1,-1)),"substring",tmp_List,null,new Position(-1,-1)).setBuiltin());
+        class_tmp.define_Function("parseInt",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"parseInt",null,null,new Position(-1,-1)).setBuiltin());
         tmp_List = new ArrayList<>();
         tmp_List.add(new VarDefNode(new ClassTypeNode("int",new Position(-1,-1)),"pos",null,new Position(-1,-1)));
-        class_tmp.define_Function("ord",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"ord",tmp_List,null,new Position(-1,-1)));
+        class_tmp.define_Function("ord",new FuncDefNode(new ClassTypeNode("int",new Position(-1,-1)),"ord",tmp_List,null,new Position(-1,-1)).setBuiltin());
         initScope.define_Class("string",class_tmp);
         return initScope;
     }

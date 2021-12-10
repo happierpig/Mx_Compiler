@@ -21,6 +21,11 @@ public class FuncDefNode extends ASTNode{
         this.isBuiltin = false;
     }
 
+    public FuncDefNode setBuiltin(){
+        this.isBuiltin = true;
+        return this;
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
