@@ -189,7 +189,7 @@ public class IRBuilder implements ASTVisitor {
         IRBasicBlock tmpExit = new IRBasicBlock(curFunction.name,curFunction); // exit-Block
         Value tmpReturnValue;
         if(!curFunction.type.toString().equals("void")){
-            curFunction.returnAddress = new Alloc("_return",((FunctionType)curFunction.type).returnType,tmpEntry);
+            curFunction.returnAddress =  stackAlloc("_return",((FunctionType)curFunction.type).returnType);
             tmpReturnValue = new Load("_return",curFunction.returnAddress,tmpExit);
         }else tmpReturnValue = new Value("Anonymous",new VoidType());
         new Ret(tmpReturnValue,tmpExit);
@@ -470,7 +470,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Alloc stackAlloc(String identifier, IRType _ty){
-        return new Alloc(identifier,_ty,curBlock);
+        return new Alloc(identifier,_ty,curFunction.entryBlock());
     }
 
     private Value heapAlloc(IRType targetType, Value byteSize){
