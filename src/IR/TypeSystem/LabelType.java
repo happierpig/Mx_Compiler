@@ -8,6 +8,11 @@ public class LabelType extends IRType{
     }
 
     @Override
+    public int alignSize() {
+        throw new RuntimeException("[Debug] Why use byteSize in label type ?");
+    }
+
+    @Override
     public String toString() {
         return "label";
     }

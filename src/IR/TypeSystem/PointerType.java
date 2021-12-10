@@ -25,6 +25,11 @@ public class PointerType extends IRType{
     }
 
     @Override
+    public int alignSize() {
+        return 8;
+    }
+
+    @Override
     public String toString() {
         return this.baseType.toString() + "*".repeat(this.dimSize);
     }

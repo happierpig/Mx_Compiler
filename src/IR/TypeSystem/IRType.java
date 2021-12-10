@@ -2,6 +2,7 @@ package IR.TypeSystem;
 
 public abstract class IRType{
     public abstract int byteSize();
+    public abstract int alignSize();
     public abstract String toString();
     public abstract boolean isEqual(IRType other);
     public IRType dePointed(){
