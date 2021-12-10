@@ -1,6 +1,15 @@
 package IR.TypeSystem;
 
 public class BoolType extends IRType{
+    public boolean inMem;
+
+    public BoolType() {
+        inMem = false;
+    }
+
+    public void setInMem(){
+        inMem = true;
+    }
 
     @Override
     public int byteSize() {
@@ -9,11 +18,11 @@ public class BoolType extends IRType{
 
     @Override
     public String toString() {
-        return null;
+        return inMem ? "i8" : "i1";
     }
 
     @Override
     public boolean isEqual(IRType other) {
-        return false;
+        return (other instanceof BoolType) && (((BoolType) other).inMem == inMem);
     }
 }
