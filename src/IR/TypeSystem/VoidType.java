@@ -8,11 +8,6 @@ public class VoidType extends IRType{
     }
 
     @Override
-    public int alignSize() {
-        throw new RuntimeException("[Debug] Why use byteSize in void type ?");
-    }
-
-    @Override
     public String toString() {
         return "void";
     }

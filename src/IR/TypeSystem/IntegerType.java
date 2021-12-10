@@ -13,11 +13,6 @@ public class IntegerType extends IRType{
     }
 
     @Override
-    public int alignSize() {
-        return this.width / 8;
-    }
-
-    @Override
     public String toString() {
         return "i" + this.width;
     }

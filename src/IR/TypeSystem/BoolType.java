@@ -1,19 +1,19 @@
 package IR.TypeSystem;
 
-public class LabelType extends IRType{
+public class BoolType extends IRType{
 
     @Override
     public int byteSize() {
-        throw new RuntimeException("[Debug] Why use byteSize in label type ?");
+        return 1;
     }
 
     @Override
     public String toString() {
-        return "label";
+        return null;
     }
 
     @Override
     public boolean isEqual(IRType other) {
-        return (other instanceof LabelType);
+        return false;
     }
 }
