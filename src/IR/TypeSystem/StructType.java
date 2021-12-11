@@ -3,8 +3,8 @@ package IR.TypeSystem;
 import java.util.HashMap;
 
 public class StructType extends IRType{
-    HashMap<String, IRType> typeTable;
-    HashMap<String, Integer> indexTable;
+    public HashMap<String, IRType> typeTable;
+    public HashMap<String, Integer> indexTable;
     public Integer count;
     public String name;
 
@@ -17,7 +17,7 @@ public class StructType extends IRType{
 
     public StructType addMember(String identifier, IRType ty){
         typeTable.put(identifier,ty);
-        indexTable.put(identifier,count++);
+        indexTable.put(identifier, count++);
         return this;
     }
 

@@ -4,7 +4,7 @@ import IR.BaseClass.Value;
 import java.util.HashMap;
 
 public class IRScope{
-    public enum scopeType {Global, Flow, Func, Common}
+    public enum scopeType {Global, Flow, Func, Common, Class}
     public IRScope parent;
     public HashMap<String, Value> valueTable;
     public scopeType type;
@@ -23,13 +23,18 @@ public class IRScope{
         return tmp == null ? this.parent.fetchValue(identifier) : tmp;
     }
 
+    public boolean isClass(String identifier){
+        Value tmp = this.valueTable.get(identifier);
+        return tmp == null ? this.parent.isClass(identifier) : (this.type == scopeType.Class);
+    }
+
     public void setVariable(String identifier,Value operand){
         this.valueTable.put(identifier,operand);
     }
 
     public void setInvalid(){
         switch(this.type){
-            case Flow, Global -> {}
+            case Flow, Global, Class -> {}
             case Common, Func -> this.valid = false;
         }
     }

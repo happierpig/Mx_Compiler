@@ -57,8 +57,8 @@ public class IRFunction extends User{
             raw.append("}\n");
         }else if(isUsed){
             raw.append("declare ").append(this.type.toString()).append(' ').append(this.getName()).append('(');
-            if (((FunctionType)this.type).parameters.size() != 0) {
-                ((FunctionType)this.type).parameters.forEach(tmp -> raw.append(tmp.toString()).append(", "));
+            if (((FunctionType)this.type).parametersType.size() != 0) {
+                ((FunctionType)this.type).parametersType.forEach(tmp -> raw.append(tmp.toString()).append(", "));
                 raw.delete(raw.length() - 2, raw.length());
             }
             raw.append(")\n");

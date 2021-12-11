@@ -4,15 +4,18 @@ import java.util.ArrayList;
 
 public class FunctionType extends IRType{
     public IRType returnType;
-    public ArrayList<IRType> parameters;
+    public ArrayList<IRType> parametersType;
+    public ArrayList<String> parametersName;
 
     public FunctionType(IRType _returnTy){
         this.returnType = _returnTy;
-        this.parameters = new ArrayList<>();
+        this.parametersType = new ArrayList<>();
+        this.parametersName = new ArrayList<>();
     }
 
-    public void addParameters(IRType _ty){
-        this.parameters.add(_ty);
+    public void addParameters(IRType _ty, String _name){
+        this.parametersType.add(_ty);
+        this.parametersName.add(_name);
     }
 
     @Override

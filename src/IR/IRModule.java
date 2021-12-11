@@ -2,6 +2,9 @@ package IR;
 
 import IR.Instruction.GlobalDef;
 import IR.Operand.StringConstant;
+import IR.TypeSystem.StructType;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class IRModule{
@@ -9,12 +12,14 @@ public class IRModule{
     public ArrayList<StringConstant> stringList;
     public ArrayList<GlobalDef> globalDefList;
     public ArrayList<IRFunction> globalInitList;
+    public ArrayList<StructType> classList;
 
     public IRModule(){
         functionList = new ArrayList<>();
         stringList = new ArrayList<>();
         globalDefList = new ArrayList<>();
         globalInitList = new ArrayList<>();
+        classList = new ArrayList<>();
     }
 
     public void addFunction(IRFunction _func){
@@ -33,8 +38,17 @@ public class IRModule{
         globalInitList.add(_func);
     }
 
+    public void addClassType(StructType ty){
+        classList.add(ty);
+    }
+
     public String toString(){
         StringBuilder raw = new StringBuilder();
+        if(classList.size() != 0) classList.forEach(tmp->{
+            raw.append(tmp.toString()).append(" = type { ");
+            tmp.typeTable.forEach((rubbish,tmpTy)->raw.append(tmpTy.toString()).append(", "));
+            raw.delete(raw.length() - 2, raw.length()).append(" }\n");
+        });
         if(stringList.size() != 0) stringList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
         if(globalDefList.size() != 0) globalDefList.forEach(tmp->raw.append(tmp.toString()).append("\n"));
         if(globalInitList.size() != 0) {
