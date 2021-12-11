@@ -84,16 +84,16 @@ public class IRBuilder implements ASTVisitor {
                                 funcType.addParameters(argType,"_this");
                             }
                         }
-                        IRFunction _func = new IRFunction("_class." + className + "_" + funcName,funcType);
+                        IRFunction _func = new IRFunction("_class_" + className + "_" + funcName,funcType);
                         if(funcNode.isBuiltin) _func.setBuiltin();
                         funcTable.put(_func.name,_func);
                         targetModule.addFunction(_func);
                     });
-                    if(!className.equals("string") && funcTable.get("_class." + className + "_" + className) == null){
+                    if(!className.equals("string") && funcTable.get("_class_" + className + "_" + className) == null){
                         FunctionType funcType = new FunctionType(new VoidType());
                         IRType argType = new PointerType(pendingType);
                         funcType.addParameters(argType,"_this");
-                        IRFunction _func = new IRFunction("_class." + className + "_" + className,funcType);
+                        IRFunction _func = new IRFunction("_class_" + className + "_" + className,funcType);
                         _func.addParameter(new Value("_arg",argType)); // this pointer
                         IRBasicBlock onlyBlock = new IRBasicBlock(_func.name,_func);
                         new Ret(new Value("Anonymous",new VoidType()),onlyBlock);
@@ -194,8 +194,15 @@ public class IRBuilder implements ASTVisitor {
             assert node.Func instanceof ObjectMemberExprNode;
             ((ObjectMemberExprNode) node.Func).base.accept(this);
             thisPtr = ((ObjectMemberExprNode) node.Func).base.IRoperand;
-            StructType classType = (StructType) thisPtr.type.dePointed();
-            func = funcTable.get("_"+classType.name+"_"+((ObjectMemberExprNode) node.Func).member);
+            if(((ObjectMemberExprNode) node.Func).base.exprType instanceof ArrayTypeNode){
+                node.IRoperand = arraySize(thisPtr);
+                return;
+            }
+            String className;
+            IRType classType = thisPtr.type.dePointed();
+            if(classType instanceof StructType) className = ((StructType) classType).name;
+            else{assert classType instanceof IntegerType;className = "class_string";}
+            func = funcTable.get("_"+className+"_"+((ObjectMemberExprNode) node.Func).member);
         }
         if(node.AryList != null) node.AryList.forEach(tmp->{
             tmp.accept(this);
@@ -419,7 +426,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ForStmtNode node) {
-        // todo : none-condition situation
         if(!cScope.isValid()) return;
         node.IRoperand = null;
         cScope = new IRScope(cScope, IRScope.scopeType.Flow);
@@ -771,6 +777,13 @@ public class IRBuilder implements ASTVisitor {
         new Branch(curBlock,condition);
         curBlock = termBlock;
         return realPointer;
+    }
+
+    private Value arraySize(Value address){
+        Value i32Pointer = new Bitcast(address,new PointerType(new IntegerType(32)),curBlock);
+        Gep biasAddress = new Gep(new PointerType(new IntegerType(32)),i32Pointer,curBlock);
+        biasAddress.addIndex(new IntConstant(-1));
+        return memoryLoad("array_size",biasAddress,curBlock);
     }
 
     private Value getStringPtr(Value raw){

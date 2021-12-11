@@ -12,7 +12,7 @@ public class StructType extends IRType{
         typeTable = new HashMap<>();
         indexTable = new HashMap<>();
         count = 0;
-        name = "class." + _name;
+        name = "class_" + _name;
     }
 
     public StructType addMember(String identifier, IRType ty){
