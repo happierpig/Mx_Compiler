@@ -187,12 +187,12 @@ public class IRBuilder implements ASTVisitor {
         Value thisPtr = null;
         if(node.Func instanceof IdentifierExprNode){
             String funcName = ((IdentifierExprNode)node.Func).identifier;
-            if(curClass != null){   // Member Function Call
-                func = funcTable.get("_"+curClass.name+"_"+funcName);
+            if(curClass != null) func = funcTable.get("_"+curClass.name+"_"+funcName);
+            if(func == null) func = funcTable.get(funcName);
+            else{ // Member function call need this pointer
                 thisPtr = cScope.fetchValue("_this"); assert thisPtr != null;
                 thisPtr = memoryLoad("_this",thisPtr,curBlock);
             }
-            if(func == null) func = funcTable.get(funcName);
         }else{
             assert node.Func instanceof ObjectMemberExprNode;
             ((ObjectMemberExprNode) node.Func).base.accept(this);
