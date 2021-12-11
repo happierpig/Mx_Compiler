@@ -207,14 +207,17 @@ public class IRBuilder implements ASTVisitor {
             else{assert classType instanceof IntegerType;className = "class_string";}
             func = funcTable.get("_"+className+"_"+((ObjectMemberExprNode) node.Func).member);
         }
-        if(node.AryList != null) node.AryList.forEach(tmp->{
-            tmp.accept(this);
-            Value tmpArg = tmp.IRoperand;
-            // may cause bugs
-            if(tmpArg instanceof StringConstant) tmpArg = getStringPtr(tmpArg);
-            tmp.IRoperand = tmpArg;
-        });
         assert func != null;
+        if(node.AryList != null){
+            for(int i=0;i < node.AryList.size();++i){
+                ASTNode tmp = node.AryList.get(i);
+                tmp.accept(this);
+                Value tmpArg = tmp.IRoperand;
+                if(tmpArg instanceof StringConstant) tmpArg = getStringPtr(tmpArg);
+                if(tmpArg instanceof NullConstant) ((NullConstant) tmpArg).setType(((FunctionType)func.type).parametersType.get(i));
+                tmp.IRoperand = tmpArg;
+            }
+        }
         Call newOperand = new Call(func,curBlock);
         if(thisPtr != null) newOperand.addArg(thisPtr); // add *this to first argument
         if(node.AryList != null) node.AryList.forEach(tmp-> newOperand.addArg(tmp.IRoperand));
