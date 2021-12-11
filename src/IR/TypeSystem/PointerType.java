@@ -15,8 +15,13 @@ public class PointerType extends IRType{
     }
 
     public PointerType(IRType _base, int _dimSize){
-        this.baseType = _base;
-        this.dimSize = _dimSize;
+        if(_base instanceof PointerType){
+            this.baseType = ((PointerType) _base).baseType;
+            this.dimSize = ((PointerType) _base).dimSize + _dimSize;
+        }else {
+            this.baseType = _base;
+            this.dimSize = _dimSize;
+        }
     }
 
     @Override

@@ -56,9 +56,9 @@ public class IRBuilder implements ASTVisitor {
         });
         typeTable.put("void",new VoidType());
         gScope.Functions_Table.forEach((funcName,funcNode)->{
-            FunctionType funcType = new FunctionType(typeTable.get(funcNode.funcType.typeId));
+            FunctionType funcType = new FunctionType(getType(funcNode.funcType));
             if(funcNode.parameterList != null) funcNode.parameterList.forEach(tmp->{
-                IRType argType = typeTable.get(tmp.varType.typeId);
+                IRType argType = getType(tmp.varType);
                 funcType.addParameters(argType,tmp.identifier);
             });
             IRFunction _func = new IRFunction("_f_"+funcName,funcType);
@@ -70,18 +70,18 @@ public class IRBuilder implements ASTVisitor {
             switch (className) {
                 case "int","bool"-> {}
                 default ->{
-                    IRType pendingType = typeTable.get(className).dePointed();
+                    IRType pendingType = typeTable.get(className).dePointed(); // String Type : i8 * corresponds to this
                     assert classScope.Class_Table.size() == 0;
-                    if(!className.equals("string")) classScope.Variable_Table.forEach((identifier,tmpTy)-> ((StructType)pendingType).addMember(identifier,typeTable.get(tmpTy.typeId)));
+                    if(!className.equals("string")) classScope.Variable_Table.forEach((identifier,tmpTy)-> ((StructType)pendingType).addMember(identifier,getType(tmpTy)));
                     classScope.Functions_Table.forEach((funcName,funcNode)->{
-                        IRType returnTy = (funcNode.funcType == null) ? new VoidType() : typeTable.get(funcNode.funcType.typeId);
+                        IRType returnTy = (funcNode.funcType == null) ? new VoidType() : getType(funcNode.funcType);
                         FunctionType funcType = new FunctionType(returnTy);
                         IRType argType = new PointerType(pendingType);
-                        funcType.addParameters(argType,"_this");
+                        funcType.addParameters(argType,"_this"); // Member Function add *this
                         if(funcNode.parameterList != null) {
                             for (VarDefNode tmp : funcNode.parameterList) {
-                                argType = typeTable.get(tmp.varType.typeId);
-                                funcType.addParameters(argType,"_this");
+                                argType = getType(tmp.varType);
+                                funcType.addParameters(argType,tmp.identifier);
                             }
                         }
                         IRFunction _func = new IRFunction("_class_" + className + "_" + funcName,funcType);
@@ -143,8 +143,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(VarDefNode node) {
         if(!cScope.isValid()) return;
-        IRType valueTy = typeTable.get(node.varType.typeId);
-        if(node.varType instanceof ArrayTypeNode) valueTy = new PointerType(valueTy,((ArrayTypeNode) node.varType).dimSize);
+        IRType valueTy = getType(node.varType);
         Value value;
         if(cScope.parent == null){ // Global definition
             value = new GlobalDef(node.identifier,valueTy);
@@ -188,7 +187,11 @@ public class IRBuilder implements ASTVisitor {
         Value thisPtr = null;
         if(node.Func instanceof IdentifierExprNode){
             String funcName = ((IdentifierExprNode)node.Func).identifier;
-            if(curClass != null) func = funcTable.get("_"+curClass.name+"_"+funcName);
+            if(curClass != null){   // Member Function Call
+                func = funcTable.get("_"+curClass.name+"_"+funcName);
+                thisPtr = cScope.fetchValue("_this"); assert thisPtr != null;
+                thisPtr = memoryLoad("_this",thisPtr,curBlock);
+            }
             if(func == null) func = funcTable.get(funcName);
         }else{
             assert node.Func instanceof ObjectMemberExprNode;
@@ -213,7 +216,7 @@ public class IRBuilder implements ASTVisitor {
         });
         assert func != null;
         Call newOperand = new Call(func,curBlock);
-        if(thisPtr != null) newOperand.addArg(thisPtr);
+        if(thisPtr != null) newOperand.addArg(thisPtr); // add *this to first argument
         if(node.AryList != null) node.AryList.forEach(tmp-> newOperand.addArg(tmp.IRoperand));
         func.setUsed();
         node.IRoperand = newOperand;
@@ -226,6 +229,8 @@ public class IRBuilder implements ASTVisitor {
             Value returnValue;
             node.returnVal.accept(this);
             returnValue = node.returnVal.IRoperand;
+            if(returnValue instanceof StringConstant) returnValue = getStringPtr(returnValue);
+            if(returnValue instanceof NullConstant) ((NullConstant) returnValue).setType(((FunctionType)curFunction.type).returnType);
             this.memoryStore(returnValue,curFunction.returnAddress);
         }
         new Branch(curBlock,curFunction.exitBlock());
@@ -469,13 +474,13 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(NewExprNode node) {
         if(!cScope.isValid()) return;
-        Value newOperand = null;
+        Value newOperand;
         if(node.isArray()){
             LinkedList<ExprNode> initList = new LinkedList<>(node.SizeList);
-            newOperand = recursiveNew(initList,new PointerType(typeTable.get(node.newType.typeId),node.DimSize));
+            newOperand = recursiveNew(initList,new PointerType(getType(node.newType),node.DimSize));
         }else{
             String className = node.newType.typeId;
-            StructType classType = (StructType)typeTable.get(className).dePointed();
+            StructType classType = (StructType) typeTable.get(className).dePointed();
             newOperand = heapAlloc(new PointerType(classType),new IntConstant(classType.byteSize()));
             Call constructor = new Call(funcTable.get("_"+classType.name+"_"+className),curBlock);
             constructor.addArg(newOperand);
@@ -499,7 +504,6 @@ public class IRBuilder implements ASTVisitor {
         cScope = new IRScope(cScope, IRScope.scopeType.Class);
         curClass.indexTable.forEach((identifier,index)->cScope.setVariable(identifier,new IntConstant(index)));
         if(node.memberFunction != null) node.memberFunction.forEach(tmp->tmp.accept(this));
-
         curClass = null;
         cScope = cScope.upRoot();
     }
@@ -707,8 +711,7 @@ public class IRBuilder implements ASTVisitor {
         IRFunction entryFunction = new IRFunction("_GLOBAL_",tempType);
         IRBasicBlock mainBody = new IRBasicBlock(entryFunction.name,entryFunction);
         this.globalInit.forEach(node->{
-            IRType valueTy = typeTable.get(node.varType.typeId);
-            if(node.varType instanceof ArrayTypeNode) valueTy = new PointerType(valueTy,((ArrayTypeNode) node.varType).dimSize);
+            IRType valueTy = getType(node.varType);
             IRFunction nowFunction = new IRFunction("_global_var_init",tempType);
             Value address = cScope.fetchValue(node.identifier);
             this.curFunction = nowFunction;
@@ -816,5 +819,11 @@ public class IRBuilder implements ASTVisitor {
         assert !flag.type.isEqual(new IntegerType(1));
         Value _condition = new Trunc(flag,new IntegerType(1),cBlock);
         new Branch(cBlock,_condition,tBlock,fBlock);
+    }
+
+    private IRType getType(TypeNode rawTy){
+        IRType returnTy = typeTable.get(rawTy.typeId);
+        if(rawTy instanceof ArrayTypeNode) returnTy = new PointerType(returnTy,((ArrayTypeNode) rawTy).dimSize);
+        return returnTy;
     }
 }
