@@ -3,8 +3,8 @@ import AST.RootNode;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
-import IR.IRModule;
-import IR.Infrastructure.IRBuilder;
+import MiddleEnd.IRModule;
+import MiddleEnd.Infrastructure.IRBuilder;
 import Utils.GlobalScope;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -18,9 +18,9 @@ import java.io.*;
 public class Main {
     public static void main(String[] args) throws Exception{
 
-//        String name = "try.mx";
-//        InputStream input = new FileInputStream(name);
-        InputStream input = System.in;
+        String name = "try.mx";
+        InputStream input = new FileInputStream(name);
+//        InputStream input = System.in;
 
         try {
             // CharStreams is ANTLR's built-in string of 01;

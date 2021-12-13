@@ -1,6 +1,6 @@
 package AST;
 
-import IR.BaseClass.Value;
+import MiddleEnd.BaseClass.Value;
 import Utils.Position;
 
 public abstract class ASTNode{
