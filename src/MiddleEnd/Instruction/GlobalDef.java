@@ -1,5 +1,6 @@
 package MiddleEnd.Instruction;
 
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 import MiddleEnd.TypeSystem.PointerType;
 
@@ -18,5 +19,10 @@ public class GlobalDef extends IRInstruction{
     @Override
     public String toString() {
         return this.getName() + " = global " + this.type.dePointed().toString() + " zeroinitializer, align " + this.type.dePointed().byteSize();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

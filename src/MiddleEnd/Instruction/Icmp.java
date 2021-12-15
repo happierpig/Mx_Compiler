@@ -3,6 +3,7 @@ package MiddleEnd.Instruction;
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
 import MiddleEnd.Infrastructure.IRBuilder;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IntegerType;
 
 public class Icmp extends IRInstruction{
@@ -18,5 +19,10 @@ public class Icmp extends IRInstruction{
     @Override
     public String toString() {
         return this.getName() + " = icmp " + op + " " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getName();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

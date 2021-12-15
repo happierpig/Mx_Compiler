@@ -3,6 +3,7 @@ package MiddleEnd.Instruction;
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
 import MiddleEnd.IRFunction;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.FunctionType;
 import MiddleEnd.TypeSystem.VoidType;
 
@@ -33,5 +34,10 @@ public class Call extends IRInstruction{
         }
         raw.append(')');
         return raw.toString();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

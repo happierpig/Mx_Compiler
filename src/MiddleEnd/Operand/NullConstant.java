@@ -1,5 +1,6 @@
 package MiddleEnd.Operand;
 
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 import MiddleEnd.TypeSystem.PointerType;
 import MiddleEnd.TypeSystem.VoidType;
@@ -27,5 +28,10 @@ public class NullConstant extends IRConstant{
     @Override
     public String toString() {
         throw new RuntimeException("[Debug] Why use toString in nullConstant ?");
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

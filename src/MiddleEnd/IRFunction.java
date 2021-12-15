@@ -2,6 +2,7 @@ package MiddleEnd;
 
 import MiddleEnd.BaseClass.User;
 import MiddleEnd.BaseClass.Value;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.FunctionType;
 import MiddleEnd.TypeSystem.IRType;
 import java.util.ArrayList;
@@ -64,5 +65,10 @@ public class IRFunction extends User{
             raw.append(")\n");
         }
         return raw.toString();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

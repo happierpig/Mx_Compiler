@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 
 public class Load extends IRInstruction{
 
@@ -13,5 +14,10 @@ public class Load extends IRInstruction{
     @Override
     public String toString() {
         return this.getName() + " = load " + this.type.toString() + ", " + this.getOperand(0).getTypeName() + ", align " + this.type.byteSize();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

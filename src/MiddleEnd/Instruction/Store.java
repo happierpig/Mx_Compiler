@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.VoidType;
 
 public class Store extends IRInstruction{
@@ -20,5 +21,10 @@ public class Store extends IRInstruction{
     @Override
     public String toString() {
         return "store " + this.getOperand(0).getTypeName() + ", " + this.getOperand(1).getTypeName() + ", align " + this.getOperand(0).type.byteSize();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

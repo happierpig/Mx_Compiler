@@ -1,5 +1,6 @@
 package MiddleEnd.Operand;
 
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.BoolType;
 
 public class BoolConstant extends IRConstant{
@@ -19,5 +20,10 @@ public class BoolConstant extends IRConstant{
     @Override
     public String toString() {
         throw new RuntimeException("[Debug] Why use toString in boolConstant ?");
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

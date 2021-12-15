@@ -1,5 +1,6 @@
 package MiddleEnd.Operand;
 
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IntegerType;
 
 public class IntConstant extends IRConstant{
@@ -18,5 +19,10 @@ public class IntConstant extends IRConstant{
     @Override
     public String toString() {
         throw new RuntimeException("[Debug] Why use toString in integerConst ?");
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

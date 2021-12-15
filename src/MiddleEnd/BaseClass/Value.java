@@ -58,4 +58,5 @@ public class Value{
     public String toString(){
         throw new RuntimeException("[Debug] Why use base value's toString");
     }
+
 }

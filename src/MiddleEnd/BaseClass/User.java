@@ -1,5 +1,6 @@
 package MiddleEnd.BaseClass;
 
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 import java.util.ArrayList;
 
@@ -30,4 +31,6 @@ public abstract class User extends Value{
     public Value getOperand(int index){
         return operands.get(index);
     }
+
+    public abstract void accept(IRVisitor visitor);
 }

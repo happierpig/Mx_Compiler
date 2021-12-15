@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 
 public class Zext extends IRInstruction{
@@ -14,5 +15,10 @@ public class Zext extends IRInstruction{
     @Override
     public String toString() {
         return this.getName() + " = zext " + this.getOperand(0).getTypeName() + " to " + this.type.toString();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

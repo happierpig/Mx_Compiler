@@ -1,6 +1,7 @@
 package MiddleEnd;
 
 import MiddleEnd.BaseClass.Value;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.Instruction.Branch;
 import MiddleEnd.Instruction.IRInstruction;
 import MiddleEnd.Instruction.Ret;
@@ -44,5 +45,9 @@ public class IRBasicBlock extends Value {
         instructions.forEach(tmp->raw.append("\t").append(tmp.toString()).append("\n"));
         raw.append("\t").append(terminator.toString()).append("\n");
         return raw.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IntegerType;
 import MiddleEnd.TypeSystem.VoidType;
 
@@ -32,5 +33,10 @@ public class Branch extends IRInstruction{
         }else return "br " + this.getOperand(0).getTypeName() + ", "
                             + this.getOperand(1).getTypeName() + ", "
                             + this.getOperand(2).getTypeName();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.VoidType;
 
 public class Ret extends IRInstruction{
@@ -19,5 +20,10 @@ public class Ret extends IRInstruction{
     @Override
     public String toString() {
         return "ret " + ((this.type instanceof VoidType) ? this.type.toString() : this.getOperand(0).getTypeName());
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -2,6 +2,7 @@ package MiddleEnd.Instruction;
 
 import MiddleEnd.BaseClass.Value;
 import MiddleEnd.IRBasicBlock;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 
 public class Gep extends IRInstruction{
@@ -24,5 +25,10 @@ public class Gep extends IRInstruction{
         assert this.operands.size() > 1;
         for(int i = 1;i < operands.size();++i) raw.append(", ").append(getOperand(i).getTypeName());
         return raw.toString();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
