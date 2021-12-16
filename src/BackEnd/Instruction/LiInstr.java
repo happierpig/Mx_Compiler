@@ -3,12 +3,13 @@ package BackEnd.Instruction;
 import BackEnd.Infrastructure.ASMBlock;
 
 /*
-    Pseudo-instruction used to load symbol's static data address into destination register
+    Pseudo-instruction used to load immediate to destination register
  */
-public class LaInstr extends Instruction{
-    // 0 rd ; 1 symbol
-    public LaInstr(ASMBlock _curBlock) {
-        super(_curBlock, "la");
+
+public class LiInstr extends Instruction{
+    // 0 for rd ; 1 for imm
+    public LiInstr(ASMBlock _curBlock) {
+        super(_curBlock, "li");
     }
 
     @Override
