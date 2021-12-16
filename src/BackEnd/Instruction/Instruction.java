@@ -3,6 +3,7 @@ package BackEnd.Instruction;
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Operand.Operand;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public abstract class Instruction{
     public ArrayList<Operand> operandList;
@@ -14,9 +15,8 @@ public abstract class Instruction{
         this.op = _op;
     }
 
-    public Instruction addOperand(Operand _o){
-        this.operandList.add(_o);
-        return this;
+    public void addOperand(Operand ... args){
+        this.operandList.addAll(Arrays.asList(args));
     }
 
     public abstract String printASM();

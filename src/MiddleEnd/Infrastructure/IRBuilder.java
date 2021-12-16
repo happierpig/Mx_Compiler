@@ -26,8 +26,8 @@ public class IRBuilder implements ASTVisitor {
     public StructType curClass;
     public enum Operator{add, sub, mul, sdiv, srem, shl, ashr, and, or, xor, logic_and, logic_or, eq, ne, sgt, sge, slt, sle, assign}
 
-    private Stack<IRBasicBlock> loopContinue;
-    private Stack<IRBasicBlock> loopBreak;
+    private final Stack<IRBasicBlock> loopContinue;
+    private final Stack<IRBasicBlock> loopBreak;
 
     public IRBuilder(IRModule _module, GlobalScope _gScope){
         this.targetModule = _module;
@@ -257,6 +257,9 @@ public class IRBuilder implements ASTVisitor {
         new Ret(tmpReturnValue,tmpExit);
         curBlock = curFunction.entryBlock();
         for(int i = 0;i < funcType.parametersName.size();++i){
+            /*
+                parameter represented by Value should have ASMOperand to denote memory.
+             */
             Value tmpArg = new Value("_arg",funcType.parametersType.get(i));
             curFunction.addParameter(tmpArg);
             Alloc realArg = this.stackAlloc(funcType.parametersName.get(i),tmpArg.type);

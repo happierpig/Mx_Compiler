@@ -58,8 +58,4 @@ public class IRModule{
         functionList.forEach(tmp->raw.append(tmp.toString()));
         return raw.toString();
     }
-
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

@@ -1,5 +1,7 @@
 package MiddleEnd.BaseClass;
 
+import BackEnd.Operand.Operand;
+import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,12 +19,14 @@ import java.util.HashMap;
 /// using this Value.
 //===----------------------------------------------------------------------===//
 public class Value{
+    public Operand ASMOperand;
     public String name;
     public IRType type;
     public ArrayList<User> useList;
     public static HashMap<String, Integer> renamingMachine = new HashMap<>();
 
     public Value(String _name,IRType _type){
+        this.ASMOperand = null;
         this.name = renaming(_name);
         this.type = _type;
         this.useList = new ArrayList<>();

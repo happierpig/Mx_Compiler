@@ -10,7 +10,9 @@ public class PhysicalRegister extends Register{
             "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"));
 
     public static final HashMap<String,PhysicalRegister> phyReg = new HashMap<>(){
-        {PhysicalRegister.phyRegName.forEach(tmp->put(tmp,new PhysicalRegister(tmp)));}
+        {
+            PhysicalRegister.phyRegName.forEach(tmp->put(tmp,new PhysicalRegister(tmp)));
+        }
     };
 
     public static final ArrayList<PhysicalRegister> callerSaved = new ArrayList<>(){
@@ -32,6 +34,11 @@ public class PhysicalRegister extends Register{
 
     public PhysicalRegister(String _name) {
         super(_name);
+    }
+
+    public PhysicalRegister(String _name,Immediate _offset){
+        super(_name);
+        this.offset = _offset;
     }
 
     public static PhysicalRegister getPhyReg(String name){

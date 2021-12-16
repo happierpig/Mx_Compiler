@@ -6,7 +6,7 @@ import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.TypeSystem.IRType;
 
 public class Gep extends IRInstruction{
-
+    // 0 for basePointer ; 1 -> n for index
     public Gep(IRType targetType, Value calculatedPointer, IRBasicBlock _block) {
         super("gep", targetType, _block);
         this.addOperand(calculatedPointer);
