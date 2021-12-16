@@ -139,9 +139,9 @@ public class ASMBuilder implements IRVisitor{
             }else{
                 assert indexValue.ASMOperand instanceof Register;
                 newOperand = new VirtualRegister();
-                Register byteSize = new VirtualRegister();
-                new LiInstr(curBlock).addOperand(byteSize,new Immediate(baseType.byteSize()));
-                new ArthInstr("mul",curBlock).addOperand(newOperand,byteSize,indexValue.ASMOperand);
+                Register biasReg = new VirtualRegister();
+                this.arthForm(biasReg,indexValue.ASMOperand,new Immediate(baseType.byteSize()),"mul");
+                this.arthForm((Register) newOperand,biasReg,basePointer,"add");
                 ((Register)newOperand).offset = new Immediate(0);
             }
         }
