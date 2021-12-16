@@ -13,12 +13,35 @@ public class PhysicalRegister extends Register{
         {PhysicalRegister.phyRegName.forEach(tmp->put(tmp,new PhysicalRegister(tmp)));}
     };
 
+    public static final ArrayList<PhysicalRegister> callerSaved = new ArrayList<>(){
+        {
+            add(getPhyReg(1));
+            for(int i = 5;i <= 7;++i) add(getPhyReg(i));
+            for(int i = 10;i <= 17;++i) add(getPhyReg(i));
+            for(int i = 28;i <= 31;++i) add(getPhyReg(i));
+        }
+    };
+
+    public static final ArrayList<PhysicalRegister> calleeSaved = new ArrayList<>(){
+        {
+            add(getPhyReg(2));
+            add(getPhyReg(8));  add(getPhyReg(9));
+            for(int i = 18;i <= 27;++i) add(getPhyReg(i));
+        }
+    };
+
     public PhysicalRegister(String _name) {
         super(_name);
     }
 
     public static PhysicalRegister getPhyReg(String name){
         PhysicalRegister tmp = phyReg.get(name);
+        assert tmp != null;
+        return tmp;
+    }
+
+    public static PhysicalRegister getPhyReg(int index){
+        PhysicalRegister tmp = phyReg.get(phyRegName.get(index));
         assert tmp != null;
         return tmp;
     }
