@@ -41,7 +41,7 @@ public class IRBuilder implements ASTVisitor {
         this.curFunction = null;
         this.curClass = null;
         loopContinue = new Stack<>(); loopBreak = new Stack<>();
-        // todo: deal with array type pointer
+
         gScope.Class_Table.forEach((className,classScope)->{
             switch (className) {
                 case "int" -> typeTable.put("int", new IntegerType(32));
@@ -600,6 +600,8 @@ public class IRBuilder implements ASTVisitor {
             Gep biasAddress = new Gep(address.type, address, curBlock);
             biasAddress.addIndex(((ArrayAccessExprNode) node).index.IRoperand);
             return biasAddress;
+        }else if(node instanceof MonoExprNode){
+            return getAddress(((MonoExprNode) node).operand);
         }else throw new RuntimeException("[Debug] Address get fault. ");
     }
 
