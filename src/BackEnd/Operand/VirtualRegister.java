@@ -8,6 +8,13 @@ public class VirtualRegister extends Register{
         virtualCount++;
     }
 
+    public VirtualRegister(Immediate _offset,int _color){
+        super("v"+virtualCount);
+        virtualCount++;
+        this.offset = _offset;
+        this.color = _color;
+    }
+
     public static void resetCount(){
         virtualCount = 0;
     }
