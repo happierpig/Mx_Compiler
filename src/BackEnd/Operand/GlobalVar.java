@@ -1,7 +1,8 @@
 package BackEnd.Operand;
 
 public class GlobalVar extends Operand{
-    public String literal;
+    public String literal; // String literal or something else;
+    // la use name to get address
 
     public GlobalVar(String _name) {
         super(_name);

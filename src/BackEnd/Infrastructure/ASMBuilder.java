@@ -60,8 +60,13 @@ public class ASMBuilder implements IRVisitor{
     }
 
     @Override
+    public void visit(GlobalDef node) {
+        node.ASMOperand = new GlobalVar(node.name);
+    }
+
+    @Override
     public void visit(Alloc node) {
-        node.ASMOperand = new PhysicalRegister("s0",curFunction.allocStack());
+        node.ASMOperand = new VirtualRegister(curFunction.allocStack(),8); // x8 = s0
     }
 
     @Override
@@ -75,14 +80,8 @@ public class ASMBuilder implements IRVisitor{
             case ashr -> op = "sra";
             default -> op = node.op.toString();
         }
-        Operand unknown = node.getOperand(0).ASMOperand;
-        Operand imm = node.getOperand(1).ASMOperand;
-        if(unknown instanceof Immediate) {
-            unknown = imm;
-            imm = node.getOperand(0).ASMOperand;
-        }
         Register newOperand = new VirtualRegister();
-        this.arthForm(newOperand,unknown,imm,op);
+        this.arthForm(newOperand,node.getOperand(0).ASMOperand,node.getOperand(1).ASMOperand,op);
         node.ASMOperand = newOperand;
     }
 
@@ -93,12 +92,61 @@ public class ASMBuilder implements IRVisitor{
     }
 
     @Override
+    public void visit(Icmp node) { // transform to slt; todo : optimization for i
+        Register newOperand = new VirtualRegister();
+        node.operands.forEach(this::recurDown);
+        Operand rs1 = node.getOperand(0).ASMOperand;
+        Operand rs2 = node.getOperand(1).ASMOperand;
+        if(rs1 instanceof Immediate tmp){
+            rs1 = new VirtualRegister();
+            new LiInstr(curBlock).addOperand(rs1,tmp);
+        }
+        if(rs2 instanceof Immediate tmp){
+            rs2 = new VirtualRegister();
+            new LiInstr(curBlock).addOperand(rs2,tmp);
+        }
+        String op = "slt";
+        switch(node.op){
+            case sgt -> new ArthInstr(op,curBlock).addOperand(newOperand,rs2,rs1);
+            case slt -> new ArthInstr(op,curBlock).addOperand(newOperand,rs1,rs2);
+            case sge -> {
+                new ArthInstr(op,curBlock).addOperand(newOperand,rs1,rs2);
+                new ArthInstr("xor",curBlock).addOperand(newOperand,newOperand,new Immediate(1)); // not SSA
+            }
+            case sle -> {
+                new ArthInstr(op,curBlock).addOperand(newOperand,rs2,rs1);
+                new ArthInstr("xor",curBlock).addOperand(newOperand,newOperand,new Immediate(1)); // not SSA
+            }
+        }
+        node.ASMOperand = newOperand;
+    }
+
+    @Override
+    public void visit(Trunc node) {
+        recurDown(node.getOperand(0));
+        node.ASMOperand = node.getOperand(0).ASMOperand;
+    }
+
+    @Override
+    public void visit(Zext node) {
+        recurDown(node.getOperand(0));
+        node.ASMOperand = node.getOperand(0).ASMOperand;
+    }
+
+    @Override
     public void visit(Branch node) {
         node.ASMOperand = null;
         node.operands.forEach(this::recurDown);
         if(node.operands.size() == 1) new JumpInstr(curBlock).addOperand(node.getOperand(0).ASMOperand);
-        else {
-            // todo:
+        else{
+            // br flag block1 block2 -> bne flag zero block1 + j block2
+            Operand flag = node.getOperand(0).ASMOperand;
+            if(flag instanceof Immediate tmp){
+                flag = new VirtualRegister();
+                new LiInstr(curBlock).addOperand(flag,tmp);
+            }
+            new BranchInstr(curBlock,"bne").addOperand(node.getOperand(1).ASMOperand,flag,PhysicalRegister.getPhyReg(0));
+            new JumpInstr(curBlock).addOperand(node.getOperand(2).ASMOperand);
         }
     }
 
@@ -149,20 +197,10 @@ public class ASMBuilder implements IRVisitor{
     }
 
     @Override
-    public void visit(GlobalDef node) {
-        node.ASMOperand = new GlobalVar(node.name);
-    }
-
-    @Override
-    public void visit(Icmp node) {
-
-    }
-
-    @Override
     public void visit(Load node) {
         Register newOperand = new VirtualRegister();
-        recurDown(node.getPointer());
-        Operand pointerOperand = node.getPointer().ASMOperand;
+        recurDown(node.getOperand(0));
+        Operand pointerOperand = node.getOperand(0).ASMOperand;
         if(pointerOperand instanceof Register){
             // Virtual Register for Gep ; Physical Register for stack variable
             new LoadInstr(curBlock,"lw").addOperand(newOperand, pointerOperand);
@@ -184,13 +222,14 @@ public class ASMBuilder implements IRVisitor{
         recurDown(node.getOperand(0));
         Operand returnValue = node.getOperand(0).ASMOperand;
         assert returnValue instanceof Register;
-        new MoveInstr(curBlock).addOperand(PhysicalRegister.getPhyReg("a0"),returnValue);
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(10)); // x10 = a0
     }
 
     @Override
     public void visit(Store node) {
         node.ASMOperand = null; // Store will not be used
-        recurDown(node.getOperand(0)); recurDown(node.getOperand(1));
+        recurDown(node.getOperand(0));
+        recurDown(node.getOperand(1));
         Operand pointerOp = node.getOperand(1).ASMOperand;
         Operand valueOp = node.getOperand(0).ASMOperand;
         Operand value = valueOp;
@@ -208,19 +247,7 @@ public class ASMBuilder implements IRVisitor{
         }
     }
 
-    @Override
-    public void visit(Trunc node) {
-        recurDown(node.getOperand(0));
-        node.ASMOperand = node.getOperand(0).ASMOperand;
-    }
-
-    @Override
-    public void visit(Zext node) {
-        recurDown(node.getOperand(0));
-        node.ASMOperand = node.getOperand(0).ASMOperand;
-    }
-
-    private void recurDown(Value node){
+    private void recurDown(Value node){  // used to travel on Operand_list
         if(node instanceof IRBasicBlock){
             if(node.ASMOperand == null) ((IRBasicBlock) node).accept(this);
         }else{
@@ -237,6 +264,11 @@ public class ASMBuilder implements IRVisitor{
     }
 
     private void arthForm(Register dest, Operand unknown, Operand imm, String op){
+        if(unknown instanceof Immediate){ // swap
+            Operand tmp = unknown;
+            unknown = imm;
+            imm = tmp;
+        }
         assert unknown instanceof Register;
         if(imm instanceof Immediate){
             if(checkImmInstr(op)){
