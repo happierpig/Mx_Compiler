@@ -8,11 +8,9 @@ import MiddleEnd.TypeSystem.FunctionType;
 import MiddleEnd.TypeSystem.VoidType;
 
 public class Call extends IRInstruction{
-    IRFunction calleeFunc;
     public Call(IRFunction _func, IRBasicBlock _block) {
         super("_call"+_func.name, ((FunctionType)_func.type).returnType, _block);
         this.addOperand(_func);
-        this.calleeFunc = _func;
     }
 
     public Call addArg(Value _arg){
