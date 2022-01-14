@@ -22,21 +22,99 @@ import MiddleEnd.TypeSystem.VoidType;
 public class ASMBuilder implements IRVisitor{
     public ASMFunction curFunction;
     public ASMBlock curBlock;
+    public ASMModule output;
 
 
     @Override
     public void visit(IRBasicBlock node) {
-
+        curBlock = (ASMBlock) node.ASMOperand;
+        node.instructions.forEach(inst->inst.accept(this));
     }
 
     @Override
     public void visit(IRFunction node) {
-
+        if(node.isBuiltin) return;
+        curFunction = (ASMFunction) node.ASMOperand;
+        curBlock = curFunction.entryBlock();
+        Register tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(8,curFunction.virtualIndex++),tmpBackup);
+        node.blockList.forEach(tmp->tmp.accept(this));
+        curBlock = curFunction.exitBlock();
+        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(8,curFunction.virtualIndex++));
     }
 
     @Override
     public void visit(IRModule node) {
+        output = new ASMModule();
+        node.stringList.forEach(tmp-> {
+            tmp.ASMOperand = new GlobalVar(tmp.name,tmp.value);
+            output.globalVars.add((GlobalVar) tmp.ASMOperand);
+        });
+        node.globalDefList.forEach(tmp->{
+            tmp.ASMOperand = new GlobalVar(tmp.name);
+            output.globalVars.add((GlobalVar)tmp.ASMOperand);
+        });
+        node.functionList.forEach(tmp->{
+            if(tmp.isBuiltin) return;
+            tmp.ASMOperand = new ASMFunction(tmp.name);
+            for(int i = 0; i < tmp.operands.size() && i <= 7;++i){
+                ((ASMFunction)tmp.ASMOperand).arguments.add(new VirtualRegister(10+i,((ASMFunction)tmp.ASMOperand).virtualIndex++));
+            }
+            for(int i = 8;i < tmp.operands.size();++i){
+                Immediate offset = ((ASMFunction)tmp.ASMOperand).allocStack();
+                Register arg = new VirtualRegister(offset,8, ((ASMFunction) tmp.ASMOperand).virtualIndex++);
+                ((ASMFunction)tmp.ASMOperand).arguments.add(arg);
+            }
+            for(int i = 0;i < tmp.operands.size();++i) tmp.getOperand(i).ASMOperand = ((ASMFunction)tmp.ASMOperand).arguments.get(i);
+            for(IRBasicBlock bb : tmp.blockList){
+                bb.ASMOperand = new ASMBlock(bb.name,(ASMFunction) tmp.ASMOperand);
+            }
+            output.functions.add((ASMFunction) tmp.ASMOperand);
+        });
+        node.globalInitList.forEach(tmp->{
+            tmp.ASMOperand = new ASMFunction(tmp.name);
+            for(IRBasicBlock bb : tmp.blockList){
+                bb.ASMOperand = new ASMBlock(bb.name,(ASMFunction) tmp.ASMOperand);
+            }
+            output.functions.add((ASMFunction) tmp.ASMOperand);
+        });
+        node.functionList.forEach(func->func.accept(this));
+        node.globalInitList.forEach(func->func.accept(this));
+    }
 
+    @Override
+    public void visit(Call node) {
+        ASMFunction func = ((ASMFunction)node.operands.get(0).ASMOperand);
+        node.operands.forEach(this::recurDown);
+
+        for(int i = 0;i <= 7 && i < node.operands.size() - 1;++i){
+            this.moveForm(func.arguments.get(i),node.getOperand(i+1).ASMOperand);
+        }
+
+        for(int i = 8;i < node.operands.size() - 1;++i){
+            Register tmpArg;
+            if(node.getOperand(i+1).ASMOperand instanceof Immediate){
+                tmpArg = new VirtualRegister(curFunction.virtualIndex);
+                new LiInstr(curBlock).addOperand(tmpArg,node.getOperand(i+1).ASMOperand);
+            }else{
+                assert node.getOperand(i+1).ASMOperand instanceof Register;
+                tmpArg = (Register) node.getOperand(i+1).ASMOperand;
+            }
+            new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset,2, curFunction.virtualIndex++));
+        }
+        // save ra
+        Register backReg = new VirtualRegister(curFunction.virtualIndex++);
+        new MoveInstr(curBlock).addOperand(backReg,new VirtualRegister(1,curFunction.virtualIndex++));
+
+        new CallInstr(curBlock).addOperand(func);
+
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(1,curFunction.virtualIndex++),backReg);
+
+        if(!(node.type instanceof VoidType)){
+            Register returnValue = new VirtualRegister(curFunction.virtualIndex++);
+            new MoveInstr(curBlock).addOperand(returnValue,new VirtualRegister(10,curFunction.virtualIndex++));
+            node.ASMOperand = returnValue;
+        }
     }
 
     @Override
@@ -66,7 +144,7 @@ public class ASMBuilder implements IRVisitor{
 
     @Override
     public void visit(Alloc node) {
-        node.ASMOperand = new VirtualRegister(curFunction.allocStack(),8); // x8 = s0
+        node.ASMOperand = new VirtualRegister(curFunction.allocStack(),8,curFunction.virtualIndex++); // x8 = s0
     }
 
     @Override
@@ -80,7 +158,7 @@ public class ASMBuilder implements IRVisitor{
             case ashr -> op = "sra";
             default -> op = node.op.toString();
         }
-        Register newOperand = new VirtualRegister();
+        Register newOperand = new VirtualRegister(curFunction.virtualIndex++);
         this.arthForm(newOperand,node.getOperand(0).ASMOperand,node.getOperand(1).ASMOperand,op);
         node.ASMOperand = newOperand;
     }
@@ -93,16 +171,16 @@ public class ASMBuilder implements IRVisitor{
 
     @Override
     public void visit(Icmp node) { // transform to slt; todo : optimization for i
-        Register newOperand = new VirtualRegister();
+        Register newOperand = new VirtualRegister(curFunction.virtualIndex++);
         node.operands.forEach(this::recurDown);
         Operand rs1 = node.getOperand(0).ASMOperand;
         Operand rs2 = node.getOperand(1).ASMOperand;
         if(rs1 instanceof Immediate tmp){
-            rs1 = new VirtualRegister();
+            rs1 = new VirtualRegister(curFunction.virtualIndex++);
             new LiInstr(curBlock).addOperand(rs1,tmp);
         }
         if(rs2 instanceof Immediate tmp){
-            rs2 = new VirtualRegister();
+            rs2 = new VirtualRegister(curFunction.virtualIndex++);
             new LiInstr(curBlock).addOperand(rs2,tmp);
         }
         String op = "slt";
@@ -142,17 +220,12 @@ public class ASMBuilder implements IRVisitor{
             // br flag block1 block2 -> bne flag zero block1 + j block2
             Operand flag = node.getOperand(0).ASMOperand;
             if(flag instanceof Immediate tmp){
-                flag = new VirtualRegister();
+                flag = new VirtualRegister(curFunction.virtualIndex++);
                 new LiInstr(curBlock).addOperand(flag,tmp);
             }
             new BranchInstr(curBlock,"bne").addOperand(node.getOperand(1).ASMOperand,flag,PhysicalRegister.getPhyReg(0));
             new JumpInstr(curBlock).addOperand(node.getOperand(2).ASMOperand);
         }
-    }
-
-    @Override
-    public void visit(Call node) {
-
     }
 
     @Override
@@ -169,7 +242,7 @@ public class ASMBuilder implements IRVisitor{
         IRType baseType = node.getOperand(0).type.dePointed();
         if(baseType instanceof ArrayType){ // String
             assert basePointer instanceof GlobalVar;
-            newOperand = new VirtualRegister();
+            newOperand = new VirtualRegister(curFunction.virtualIndex++);
             new LaInstr(curBlock).addOperand(newOperand,basePointer);
         }else if(baseType instanceof StructType){   // Class
             assert node.getOperand(2) instanceof IntConstant;
@@ -186,8 +259,8 @@ public class ASMBuilder implements IRVisitor{
                 ((Register)newOperand).offset = new Immediate(offset);
             }else{
                 assert indexValue.ASMOperand instanceof Register;
-                newOperand = new VirtualRegister();
-                Register biasReg = new VirtualRegister();
+                newOperand = new VirtualRegister(curFunction.virtualIndex++);
+                Register biasReg = new VirtualRegister(curFunction.virtualIndex++);
                 this.arthForm(biasReg,indexValue.ASMOperand,new Immediate(baseType.byteSize()),"mul");
                 this.arthForm((Register) newOperand,biasReg,basePointer,"add");
                 ((Register)newOperand).offset = new Immediate(0);
@@ -198,7 +271,7 @@ public class ASMBuilder implements IRVisitor{
 
     @Override
     public void visit(Load node) {
-        Register newOperand = new VirtualRegister();
+        Register newOperand = new VirtualRegister(curFunction.virtualIndex++);
         recurDown(node.getOperand(0));
         Operand pointerOperand = node.getOperand(0).ASMOperand;
         if(pointerOperand instanceof Register){
@@ -206,7 +279,7 @@ public class ASMBuilder implements IRVisitor{
             new LoadInstr(curBlock,"lw").addOperand(newOperand, pointerOperand);
         }else{
             assert pointerOperand instanceof GlobalVar;
-            Register addressReg = new VirtualRegister();
+            Register addressReg = new VirtualRegister(curFunction.virtualIndex++);
             new LaInstr(curBlock).addOperand(addressReg, pointerOperand);
             addressReg.offset = new Immediate(0);
             new LoadInstr(curBlock,"lw").addOperand(newOperand,addressReg);
@@ -217,12 +290,13 @@ public class ASMBuilder implements IRVisitor{
     @Override
     public void visit(Ret node) {
         node.ASMOperand = null;
-        new RetInstr(curBlock);
-        if(node.type instanceof VoidType) return;
-        recurDown(node.getOperand(0));
-        Operand returnValue = node.getOperand(0).ASMOperand;
-        assert returnValue instanceof Register;
-        new MoveInstr(curBlock).addOperand(new VirtualRegister(10)); // x10 = a0
+        if(!(node.type instanceof VoidType)){
+            recurDown(node.getOperand(0));
+            Operand returnValue = node.getOperand(0).ASMOperand;
+            assert returnValue instanceof Register;
+            new MoveInstr(curBlock).addOperand(new VirtualRegister(10,curFunction.virtualIndex++),returnValue); // x10 = a0
+        }
+        // ret instruction added to the last
     }
 
     @Override
@@ -234,13 +308,20 @@ public class ASMBuilder implements IRVisitor{
         Operand valueOp = node.getOperand(0).ASMOperand;
         Operand value = valueOp;
         if(valueOp instanceof Immediate){
-            value = new VirtualRegister();
+            value = new VirtualRegister(curFunction.virtualIndex++);
             new LiInstr(curBlock).addOperand(value, valueOp);
-        } else assert value instanceof Register;
+        } else{
+            assert value instanceof Register;
+            if(((Register)value).offset != null){
+                Register tmpLoad = new VirtualRegister(curFunction.virtualIndex++);
+                new LoadInstr(curBlock,"lw").addOperand(tmpLoad,value);
+                value = tmpLoad;
+            }
+        }
         if(pointerOp instanceof Register) new StoreInstr(curBlock,"sw").addOperand(value,pointerOp);
         else {
             assert pointerOp instanceof GlobalVar;
-            Register addressReg = new VirtualRegister();
+            Register addressReg = new VirtualRegister(curFunction.virtualIndex++);
             new LaInstr(curBlock).addOperand(addressReg,pointerOp);
             addressReg.offset = new Immediate(0);
             new StoreInstr(curBlock,"sw").addOperand(value,addressReg);
@@ -263,6 +344,14 @@ public class ASMBuilder implements IRVisitor{
         }
     }
 
+    private void moveForm(Register target, Operand source){
+        if(source instanceof Immediate){
+            new LiInstr(curBlock).addOperand(target,source);
+        }else{
+            new MoveInstr(curBlock).addOperand(target,source);
+        }
+    }
+
     private void arthForm(Register dest, Operand unknown, Operand imm, String op){
         if(unknown instanceof Immediate){ // swap
             Operand tmp = unknown;
@@ -274,7 +363,7 @@ public class ASMBuilder implements IRVisitor{
             if(checkImmInstr(op)){
                 new ArthInstr(op,curBlock).addOperand(dest,unknown,imm);
             }else{
-                Register immReg = new VirtualRegister();
+                Register immReg = new VirtualRegister(curFunction.virtualIndex++);
                 new LiInstr(curBlock).addOperand(immReg,imm);
                 new ArthInstr(op,curBlock).addOperand(dest,unknown,immReg);
             }

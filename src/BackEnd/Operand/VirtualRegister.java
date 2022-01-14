@@ -1,27 +1,24 @@
 package BackEnd.Operand;
 
 public class VirtualRegister extends Register{
-    public static int virtualCount = 0;
-
-    public VirtualRegister() {
+    public VirtualRegister(int virtualCount) {
         super("v"+virtualCount);
-        virtualCount++;
     }
 
-    public VirtualRegister(int _color){
+    public VirtualRegister(int _color,int virtualCount){
         super("v"+virtualCount);
-        virtualCount++;
         this.color = _color;
     }
 
-    public VirtualRegister(Immediate _offset,int _color){
+    public VirtualRegister(Immediate _offset,int _color,int virtualCount){
         super("v"+virtualCount);
-        virtualCount++;
         this.offset = _offset;
         this.color = _color;
     }
 
-    public static void resetCount(){
-        virtualCount = 0;
+    @Override
+    public String getName(){
+        if(color == 32) return this.name;
+        else return PhysicalRegister.phyRegName.get(color);
     }
 }

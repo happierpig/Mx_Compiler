@@ -183,9 +183,9 @@ Not decided yet.
 1. `bool`类型：`true`为真，`false`为假。
 2. `int`类型：大小范围在$[-2^{31}, 2^{31})$内的整数。
 3. `void`类型：表明函数没有返回值的特殊类型，仅仅可以用于函数返回值。
-4. `string`类型：字符串是引用类型，*可以改变它的值但是本身不能被改变（immutable）。*
+4. `string`类型：字符串是引用类型，可以改变它的值但是本身不能被改变（immutable）。
 
-***任何形式的类型转换（隐式类型转换，强制类型转换）在本语言中是未定义的。*** 
+任何形式的类型转换（隐式类型转换，强制类型转换）在本语言中是未定义的。
 
 #### **7.2** **数组类型**
 
@@ -498,7 +498,13 @@ if (condition) {
 }
 ``````
 
-其中`condition`字段必须返回`bool`值，并且不能为空。如果`condition`返回了非`bool`值或者空应当视为语法错误。一个`if`语句可以没有`else`部分。
+其中`condition`字段必须返回`bool`值，并且不能为空。如果`condition`返回了非`bool`值或者空应当视为语法错误。
+
+一个`if`语句可以没有`else`部分。若大括号中仅有一个 Expression 或 Statement，则可以省略大括号。如下例：
+
+``````c++
+if (condition) <Expression and Statement if true>
+``````
 
 #### **11.3 循环语句**
 
@@ -510,7 +516,8 @@ while (condition) {
 }
 ``````
 
-如果`condition`返回非`bool`值或者空应当视为语法错误。
+如果`condition`返回非`bool`值或者为空应当视为语法错误。
+
 `for`循环语句语法要求如下：
 
 ``````c++
@@ -519,8 +526,14 @@ for (init; condition; incr) {
 }
 ``````
 
+如果`condition`返回了非`bool`值视为语法错误，但是可以为空。
 
-如果`condition`返回了非`bool`值视为语法错误，但是可以空。
+若大括号中仅有一个 Expression 或 Statement，则可以省略大括号。如下例：
+
+``````c++
+while (condition) <Expression and Statement if true>
+for (init; condition; incr) <Expressions and Statements if true>
+``````
 
 #### **11.4 跳转语句**
 
@@ -662,15 +675,15 @@ gcc构筑命令：`./configure --prefix=/opt/riscv --with-arch=rv32ima --with-ab
 
 为了减少git所消耗的时间，所需要的部分依赖库已经集成在Docker中，以下均为绝对路径。
 
-|  Component  | File Name                | Path                                  | Language |
-| :---------: | ------------------------ | ------------------------------------- | :------: |
-| ANTLR 4.9.1 | antlr-4.9.1-complete.jar | `/ulib/java/antlr-4.9.1-complete.jar` |   Java   |
-|  ANTLR 4.9  | antlr-4.9-complete.jar   | `/ulib/java/antlr-4.9-complete.jar`   |   Java   |
-|  ANTLR 4.8  | antlr-4.8-complete.jar   | `/ulib/java/antlr-4.8-complete.jar`   |   Java   |
-| ANTLR 4.7.2 | antlr-4.7.2-complete.jar | `/ulib/java/antlr-4.7.2-complete.jar` |   Java   |
-| ANTLR 4.7.1 | antlr-4.7.1-complete.jar | `/ulib/java/antlr-4.7.1-complete.jar` |   Java   |
-|  ANTLR 4.7  | antlr-4.7-complete.jar   | `/ulib/java/antlr-4.7-complete.jar`   |   Java   |
-|  ANTLR 4.6  | antlr-4.6-complete.jar   | `/ulib/java/antlr-4.6-complete.jar`   |   Java   |
+| Component | File Name | Path | Language |
+|:-----------:|-----------|------|:----------:|
+|ANTLR 4.9.1| antlr-4.9.1-complete.jar |`/ulib/java/antlr-4.9.1-complete.jar`|Java|
+|ANTLR 4.9| antlr-4.9-complete.jar |`/ulib/java/antlr-4.9-complete.jar`|Java|
+|ANTLR 4.8| antlr-4.8-complete.jar |`/ulib/java/antlr-4.8-complete.jar`|Java|
+|ANTLR 4.7.2| antlr-4.7.2-complete.jar |`/ulib/java/antlr-4.7.2-complete.jar`|Java|
+|ANTLR 4.7.1| antlr-4.7.1-complete.jar |`/ulib/java/antlr-4.7.1-complete.jar`|Java|
+|ANTLR 4.7| antlr-4.7-complete.jar |`/ulib/java/antlr-4.7-complete.jar`|Java|
+|ANTLR 4.6| antlr-4.6-complete.jar |`/ulib/java/antlr-4.6-complete.jar`|Java|
 
 需要的库请联系TA，放入Docker。
 

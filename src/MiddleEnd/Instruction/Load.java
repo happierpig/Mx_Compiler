@@ -16,10 +16,6 @@ public class Load extends IRInstruction{
         return this.getName() + " = load " + this.type.toString() + ", " + this.getOperand(0).getTypeName() + ", align " + this.type.byteSize();
     }
 
-    public Value getPointer(){
-        return this.getOperand(0);
-    }
-
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);

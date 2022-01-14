@@ -9,8 +9,8 @@ public class Store extends IRInstruction{
 
     public Store(Value _value, Value _address, IRBasicBlock _block) {
         super("_store", new VoidType(), _block);
-        this.addOperand(_value);
-        this.addOperand(_address);
+        this.addOperand(_value); // 0 for value
+        this.addOperand(_address); // 1 for address
     }
 
     @Override

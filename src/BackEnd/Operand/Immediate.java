@@ -10,4 +10,8 @@ public class Immediate extends Operand{
         super(String.valueOf(_value));
         this.value = _value;
     }
+
+    public String toString(){
+        return String.valueOf(value);
+    }
 }

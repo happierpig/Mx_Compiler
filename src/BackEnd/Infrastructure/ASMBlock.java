@@ -16,4 +16,11 @@ public class ASMBlock extends Operand{
     public void addInstruction(Instruction _instr){
         this.instructionList.add(_instr);
     }
+
+    public String printASM(){
+        StringBuilder raw = new StringBuilder();
+        raw.append(getName()).append(":\n");
+        instructionList.forEach(inst->raw.append('\t').append(inst.printASM()).append('\n'));
+        return raw.toString();
+    }
 }

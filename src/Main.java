@@ -1,5 +1,7 @@
 import AST.ASTBuilder;
 import AST.RootNode;
+import BackEnd.Infrastructure.ASMBlock;
+import BackEnd.Infrastructure.ASMBuilder;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
@@ -58,6 +60,11 @@ public class Main {
             irb.visit(rt);
             irb.processGlobalInit();
             System.out.println(module);
+
+            // ASM
+            ASMBuilder asmB = new ASMBuilder();
+            asmB.visit(module);
+            System.out.println(asmB.output.printASM());
 
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());

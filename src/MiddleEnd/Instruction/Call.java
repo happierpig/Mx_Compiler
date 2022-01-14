@@ -13,6 +13,7 @@ public class Call extends IRInstruction{
         this.addOperand(_func);
     }
 
+    // 0：function 1-: arguments
     public Call addArg(Value _arg){
         this.addOperand(_arg);
         return this;

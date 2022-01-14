@@ -12,6 +12,6 @@ public class StoreInstr extends Instruction{
 
     @Override
     public String printASM() {
-        return String.format("%s\t%s, %s(%s)", op, operandList.get(0).getName(), operandList.get(1).getName(), ((Register)operandList.get(1)).offset.getName());
+        return String.format("%s\t%s, %s(%s)", op, operandList.get(0).getName(), ((Register)operandList.get(1)).offset, operandList.get(1).getName());
     }
 }
