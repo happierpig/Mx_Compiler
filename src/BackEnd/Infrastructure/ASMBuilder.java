@@ -13,10 +13,7 @@ import MiddleEnd.Operand.BoolConstant;
 import MiddleEnd.Operand.IntConstant;
 import MiddleEnd.Operand.NullConstant;
 import MiddleEnd.Operand.StringConstant;
-import MiddleEnd.TypeSystem.ArrayType;
-import MiddleEnd.TypeSystem.IRType;
-import MiddleEnd.TypeSystem.StructType;
-import MiddleEnd.TypeSystem.VoidType;
+import MiddleEnd.TypeSystem.*;
 
 
 public class ASMBuilder implements IRVisitor{
@@ -56,14 +53,16 @@ public class ASMBuilder implements IRVisitor{
             output.globalVars.add((GlobalVar)tmp.ASMOperand);
         });
         node.functionList.forEach(tmp->{
-            if(tmp.isBuiltin) return;
             tmp.ASMOperand = new ASMFunction(tmp.name);
-            for(int i = 0; i < tmp.operands.size() && i <= 7;++i){
+            ((ASMFunction)tmp.ASMOperand).isBuiltin = tmp.isBuiltin;
+            int parameterSize = ((FunctionType)tmp.type).parametersType.size();
+            for(int i = 0; i < parameterSize && i <= 7;++i){
                 ((ASMFunction)tmp.ASMOperand).arguments.add(new VirtualRegister(10+i,((ASMFunction)tmp.ASMOperand).virtualIndex++));
             }
-            for(int i = 8;i < tmp.operands.size();++i){
+            for(int i = 8;i < parameterSize;++i){
                 Immediate offset = ((ASMFunction)tmp.ASMOperand).allocStack().reverse();
                 Register arg = new VirtualRegister(offset,8, ((ASMFunction) tmp.ASMOperand).virtualIndex++);
+                arg.inMem = true;
                 ((ASMFunction)tmp.ASMOperand).arguments.add(arg);
             }
             for(int i = 0;i < tmp.operands.size();++i) tmp.getOperand(i).ASMOperand = ((ASMFunction)tmp.ASMOperand).arguments.get(i);
@@ -248,16 +247,18 @@ public class ASMBuilder implements IRVisitor{
         }else if(baseType instanceof StructType){   // Class
             assert node.getOperand(2) instanceof IntConstant;
             assert basePointer instanceof Register;
+            basePointer = new VirtualRegister((VirtualRegister) basePointer);
             int offset = ((StructType) baseType).getOffset(((IntConstant) node.getOperand(2)).value);
             newOperand = basePointer;
             ((Register)newOperand).offset = new Immediate(offset);
         }else{  // Array
             assert basePointer instanceof Register;
+            basePointer = new VirtualRegister((VirtualRegister) basePointer);
             Value indexValue = node.getOperand(1);
             if(indexValue instanceof IntConstant){
                 int offset = ((IntConstant) indexValue).value * baseType.byteSize();
-                newOperand = basePointer;
-                ((Register)newOperand).offset = new Immediate(offset);
+                newOperand = new VirtualRegister(curFunction.virtualIndex++);
+                this.arthForm((Register) newOperand,basePointer,new Immediate(offset),"add");
             }else{
                 assert indexValue.ASMOperand instanceof Register;
                 newOperand = new VirtualRegister(curFunction.virtualIndex++);
@@ -313,7 +314,7 @@ public class ASMBuilder implements IRVisitor{
             new LiInstr(curBlock).addOperand(value, valueOp);
         } else{
             assert value instanceof Register;
-            if(((Register)value).offset != null){
+            if(((Register)value).inMem){
                 Register tmpLoad = new VirtualRegister(curFunction.virtualIndex++);
                 new LoadInstr(curBlock,"lw").addOperand(tmpLoad,value);
                 value = tmpLoad;

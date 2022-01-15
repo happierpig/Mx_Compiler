@@ -12,6 +12,7 @@ public class ASMFunction extends Operand{
     public ArrayList<Register> arguments;
     public int stackBias;
     public int virtualIndex;
+    public boolean isBuiltin;
 
     public ASMFunction(String _name) {
         super(_name);
@@ -25,9 +26,14 @@ public class ASMFunction extends Operand{
         blockList.add(_block);
     }
 
-    public ASMBlock entryBlock(){return blockList.get(0);}
+    public ASMBlock entryBlock(){
+        return blockList.get(0);
+    }
 
-    public ASMBlock exitBlock(){return blockList.get(1);}
+    public ASMBlock exitBlock(){
+        if(blockList.size() == 1) return blockList.get(0);
+        return blockList.get(1);
+    }
 
     public Immediate allocStack(){
         Immediate tmp = new Immediate(this.stackBias);

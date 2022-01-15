@@ -3,9 +3,11 @@ package BackEnd.Operand;
 public abstract class Register extends Operand{
     public Immediate offset;
     public int color;    // 32 for null; 0-31 represent physical register.
+    public boolean inMem;
 
     public Register(String _name) {
         super(_name);
+        this.inMem = false;
         this.offset = null;
         this.color = 32;
     }
