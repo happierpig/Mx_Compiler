@@ -62,7 +62,7 @@ public class ASMBuilder implements IRVisitor{
                 ((ASMFunction)tmp.ASMOperand).arguments.add(new VirtualRegister(10+i,((ASMFunction)tmp.ASMOperand).virtualIndex++));
             }
             for(int i = 8;i < tmp.operands.size();++i){
-                Immediate offset = ((ASMFunction)tmp.ASMOperand).allocStack();
+                Immediate offset = ((ASMFunction)tmp.ASMOperand).allocStack().reverse();
                 Register arg = new VirtualRegister(offset,8, ((ASMFunction) tmp.ASMOperand).virtualIndex++);
                 ((ASMFunction)tmp.ASMOperand).arguments.add(arg);
             }
@@ -145,7 +145,7 @@ public class ASMBuilder implements IRVisitor{
 
     @Override
     public void visit(Alloc node) {
-        node.ASMOperand = new VirtualRegister(curFunction.allocStack(),8,curFunction.virtualIndex++); // x8 = s0
+        node.ASMOperand = new VirtualRegister(curFunction.allocStack().reverse(),8,curFunction.virtualIndex++); // x8 = s0
     }
 
     @Override

@@ -10,6 +10,6 @@ public class BranchInstr extends Instruction{
 
     @Override
     public String printASM() {
-        return op + "\t" + operandList.get(1).getName() + "," + operandList.get(2) + "," + operandList.get(0);
+        return op + "\t" + operandList.get(1).getName() + "," + operandList.get(2).getName() + "," + operandList.get(0).getName();
     }
 }

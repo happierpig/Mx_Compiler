@@ -11,6 +11,10 @@ public class Immediate extends Operand{
         this.value = _value;
     }
 
+    public Immediate reverse(){
+        return new Immediate(-value);
+    }
+
     public String toString(){
         return String.valueOf(value);
     }
