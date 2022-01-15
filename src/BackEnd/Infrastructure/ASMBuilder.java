@@ -29,6 +29,7 @@ public class ASMBuilder implements IRVisitor{
     public void visit(IRBasicBlock node) {
         curBlock = (ASMBlock) node.ASMOperand;
         node.instructions.forEach(inst->inst.accept(this));
+        node.terminator.accept(this);
     }
 
     @Override
@@ -37,10 +38,10 @@ public class ASMBuilder implements IRVisitor{
         curFunction = (ASMFunction) node.ASMOperand;
         curBlock = curFunction.entryBlock();
         Register tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
-        new MoveInstr(curBlock).addOperand(new VirtualRegister(8,curFunction.virtualIndex++),tmpBackup);
+        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(8,curFunction.virtualIndex++));
         node.blockList.forEach(tmp->tmp.accept(this));
         curBlock = curFunction.exitBlock();
-        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(8,curFunction.virtualIndex++));
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(8,curFunction.virtualIndex++),tmpBackup);
     }
 
     @Override
@@ -83,7 +84,7 @@ public class ASMBuilder implements IRVisitor{
     }
 
     @Override
-    public void visit(Call node) {
+    public void visit(Call node) { //todo : decrease sp & change fp & increase sp & add ret
         ASMFunction func = ((ASMFunction)node.operands.get(0).ASMOperand);
         node.operands.forEach(this::recurDown);
 
