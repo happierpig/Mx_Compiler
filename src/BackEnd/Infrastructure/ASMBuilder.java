@@ -35,7 +35,8 @@ public class ASMBuilder implements IRVisitor{
         curFunction = (ASMFunction) node.ASMOperand;
         curBlock = curFunction.entryBlock();
         Register tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
-        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(8,curFunction.virtualIndex++));
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(9,curFunction.virtualIndex++),new VirtualRegister(8,curFunction.virtualIndex++));
+        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(9,curFunction.virtualIndex++));
         node.blockList.forEach(tmp->tmp.accept(this));
         curBlock = curFunction.exitBlock();
         new MoveInstr(curBlock).addOperand(new VirtualRegister(8,curFunction.virtualIndex++),tmpBackup);
@@ -181,7 +182,7 @@ public class ASMBuilder implements IRVisitor{
     }
 
     @Override
-    public void visit(Icmp node) { // transform to slt; todo : optimization for i
+    public void visit(Icmp node) { // transform to slt;
         Register newOperand = new VirtualRegister(curFunction.virtualIndex++);
         node.operands.forEach(this::recurDown);
         Operand rs1 = node.getOperand(0).ASMOperand;

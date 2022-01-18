@@ -64,14 +64,6 @@ public class EasyStack{
             ListIterator<Instruction> it = bb.instructionList.listIterator();
             while(it.hasNext()){
                 Instruction inst = it.next();
-                if(inst.rd instanceof VirtualRegister vReg){
-                    if(vReg.color != 32) inst.rd = new PhysicalRegister(vReg);
-                    else{
-                        int offset = findVReg(vReg.getName());
-                        inst.rd = new PhysicalRegister(5,vReg);
-                        addStore(it,"t0",offset);
-                    }
-                }
                 if(inst.rs1 instanceof VirtualRegister vReg){
                     if(vReg.color != 32) inst.rs1 = new PhysicalRegister(vReg);
                     else{
@@ -86,6 +78,14 @@ public class EasyStack{
                         int offset = findVReg(vReg.getName());
                         inst.rs2 = new PhysicalRegister(7,vReg);
                         addLoad(it,"t2",offset);
+                    }
+                }
+                if(inst.rd instanceof VirtualRegister vReg){
+                    if(vReg.color != 32) inst.rd = new PhysicalRegister(vReg);
+                    else{
+                        int offset = findVReg(vReg.getName());
+                        inst.rd = new PhysicalRegister(5,vReg);
+                        addStore(it,"t0",offset);
                     }
                 }
             }
