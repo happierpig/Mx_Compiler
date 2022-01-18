@@ -64,7 +64,8 @@ public class EasyStack{
             ListIterator<Instruction> it = bb.instructionList.listIterator();
             while(it.hasNext()){
                 Instruction inst = it.next();
-                if(inst.rs1 instanceof VirtualRegister vReg){
+                if(inst.rs1 instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rs1;
                     if(vReg.color != 32) inst.rs1 = new PhysicalRegister(vReg);
                     else{
                         int offset = findVReg(vReg.getName());
@@ -72,7 +73,8 @@ public class EasyStack{
                         addLoad(it,"t1",offset);
                     }
                 }
-                if(inst.rs2 instanceof VirtualRegister vReg){
+                if(inst.rs2 instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rs2;
                     if(vReg.color != 32) inst.rs2 = new PhysicalRegister(vReg);
                     else{
                         int offset = findVReg(vReg.getName());
@@ -80,7 +82,8 @@ public class EasyStack{
                         addLoad(it,"t2",offset);
                     }
                 }
-                if(inst.rd instanceof VirtualRegister vReg){
+                if(inst.rd instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rd;
                     if(vReg.color != 32) inst.rd = new PhysicalRegister(vReg);
                     else{
                         int offset = findVReg(vReg.getName());
@@ -123,13 +126,16 @@ public class EasyStack{
     private void preProcess(ASMFunction func){
         func.blockList.forEach(bb->{
             bb.instructionList.forEach(inst->{
-                if(inst.rd instanceof VirtualRegister vReg){
+                if(inst.rd instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rd;
                     if(vReg.color == 32) defineVReg(func,vReg.getName());
                 }
-                if(inst.rs1 instanceof VirtualRegister vReg){
+                if(inst.rs1 instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rs1;
                     if(vReg.color == 32) defineVReg(func,vReg.getName());
                 }
-                if(inst.rs2 instanceof VirtualRegister vReg){
+                if(inst.rs2 instanceof VirtualRegister){
+                    VirtualRegister vReg = (VirtualRegister) inst.rs2;
                     if(vReg.color == 32) defineVReg(func,vReg.getName());
                 }
             });
