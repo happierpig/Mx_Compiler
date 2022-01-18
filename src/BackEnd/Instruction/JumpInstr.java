@@ -10,9 +10,10 @@ public class JumpInstr extends Instruction{
     }
 
     @Override
-    public void addOperand(Operand... args) {
+    public Instruction addOperand(Operand... args) {
         assert args.length == 1;
         rd = args[0]; rs1 = null; rs2 = null;
+        return this;
     }
 
     @Override

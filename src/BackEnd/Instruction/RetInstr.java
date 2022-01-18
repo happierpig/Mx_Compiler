@@ -11,7 +11,7 @@ public class RetInstr extends Instruction{
     }
 
     @Override
-    public void addOperand(Operand... args) {
+    public Instruction addOperand(Operand... args) {
         throw new RuntimeException("Why call this?");
     }
 

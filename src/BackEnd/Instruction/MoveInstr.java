@@ -10,9 +10,10 @@ public class MoveInstr extends Instruction{
     }
 
     @Override
-    public void addOperand(Operand... args) {
+    public Instruction addOperand(Operand... args) {
         assert args.length == 2;
         rd = args[0]; rs1 = args[1]; rs2 = null;
+        return this;
     }
 
     @Override

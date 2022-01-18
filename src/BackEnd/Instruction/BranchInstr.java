@@ -10,9 +10,10 @@ public class BranchInstr extends Instruction{
     }
 
     @Override
-    public void addOperand(Operand... args) {
+    public Instruction addOperand(Operand... args) {
         assert args.length == 3;
         rd = args[0]; rs1 = args[1]; rs2 = args[2];
+        return this;
     }
 
     @Override

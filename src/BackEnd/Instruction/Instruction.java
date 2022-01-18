@@ -14,7 +14,7 @@ public abstract class Instruction{
         this.op = _op;
     }
 
-    public abstract void addOperand(Operand ... args);
+    public abstract Instruction addOperand(Operand ... args);
 
 
     public abstract String printASM();

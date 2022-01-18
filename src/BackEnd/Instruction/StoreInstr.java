@@ -12,9 +12,10 @@ public class StoreInstr extends Instruction{
     }
 
     @Override
-    public void addOperand(Operand... args) {
+    public Instruction addOperand(Operand... args) {
         assert args.length == 2;
         rd = null; rs1 = args[1]; rs2 = args[0];
+        return this;
     }
 
     @Override
