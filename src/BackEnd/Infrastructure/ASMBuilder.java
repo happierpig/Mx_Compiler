@@ -339,10 +339,10 @@ public class ASMBuilder implements IRVisitor{
         }
     }
 
-    private boolean checkImmInstr(String op){
+    private boolean checkImmInstr(String op,int offset){
         switch(op){
             case "sub","mul","div","rem" ->{return false;}
-            default ->{ return true;}
+            default -> {return -2048 <= offset && offset < 2048;}
         }
     }
 
@@ -362,7 +362,7 @@ public class ASMBuilder implements IRVisitor{
         }
         assert unknown instanceof Register;
         if(imm instanceof Immediate){
-            if(checkImmInstr(op)){
+            if(checkImmInstr(op,((Immediate)imm).value)){
                 new ArthInstr(op,curBlock).addOperand(dest,unknown,imm);
             }else{
                 Register immReg = new VirtualRegister(curFunction.virtualIndex++);
