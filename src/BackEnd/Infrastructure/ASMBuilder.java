@@ -187,11 +187,14 @@ public class ASMBuilder implements IRVisitor{
         node.operands.forEach(this::recurDown);
         Operand rs1 = node.getOperand(0).ASMOperand;
         Operand rs2 = node.getOperand(1).ASMOperand;
-        if(rs1 instanceof Immediate tmp){
+        Immediate tmp;
+        if(rs1 instanceof Immediate){
+            tmp = (Immediate) rs1;
             rs1 = new VirtualRegister(curFunction.virtualIndex++);
             new LiInstr(curBlock).addOperand(rs1,tmp);
         }
-        if(rs2 instanceof Immediate tmp){
+        if(rs2 instanceof Immediate){
+            tmp = (Immediate) rs2;
             rs2 = new VirtualRegister(curFunction.virtualIndex++);
             new LiInstr(curBlock).addOperand(rs2,tmp);
         }
