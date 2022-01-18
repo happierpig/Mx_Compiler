@@ -1,6 +1,7 @@
 package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
+import BackEnd.Operand.Operand;
 
 public class CallInstr extends Instruction{
     // 0 func
@@ -9,7 +10,13 @@ public class CallInstr extends Instruction{
     }
 
     @Override
+    public void addOperand(Operand... args) {
+        assert args.length == 1;
+        rd = args[0]; rs1 = null; rs2 = null;
+    }
+
+    @Override
     public String printASM() {
-        return op + "\t" + operandList.get(0).getName();
+        return op + "\t" + rd.getName();
     }
 }

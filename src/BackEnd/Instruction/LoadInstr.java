@@ -1,6 +1,7 @@
 package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
+import BackEnd.Operand.Operand;
 import BackEnd.Operand.Register;
 
 /*
@@ -15,7 +16,13 @@ public class LoadInstr extends Instruction{
     }
 
     @Override
+    public void addOperand(Operand... args) {
+        assert args.length == 2;
+        rd = args[0]; rs1 = args[1]; rs2 = null;
+    }
+
+    @Override
     public String printASM() {
-        return String.format("%s\t%s, %s(%s)", op, operandList.get(0).getName(), ((Register)operandList.get(1)).offset, operandList.get(1).getName());
+        return String.format("%s\t%s, %s(%s)", op, rd.getName(), ((Register)rs1).offset, rs1.getName());
     }
 }

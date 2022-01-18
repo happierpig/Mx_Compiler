@@ -1,6 +1,7 @@
 package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
+import BackEnd.Operand.Operand;
 
 public class BranchInstr extends Instruction{
     // 0 destBlock ; 1 rs1 ; 2 rs2
@@ -9,7 +10,13 @@ public class BranchInstr extends Instruction{
     }
 
     @Override
+    public void addOperand(Operand... args) {
+        assert args.length == 3;
+        rd = args[0]; rs1 = args[1]; rs2 = args[2];
+    }
+
+    @Override
     public String printASM() {
-        return op + "\t" + operandList.get(1).getName() + "," + operandList.get(2).getName() + "," + operandList.get(0).getName();
+        return op + "\t" + rs1.getName() + "," + rs2.getName() + "," + rd.getName();
     }
 }
