@@ -10,7 +10,7 @@ public abstract class Instruction{
     public String op;
 
     public Instruction(ASMBlock _curBlock,String _op){
-        _curBlock.addInstruction(this);
+        if(_curBlock != null) _curBlock.addInstruction(this); // Spilling register to memory
         this.op = _op;
     }
 
