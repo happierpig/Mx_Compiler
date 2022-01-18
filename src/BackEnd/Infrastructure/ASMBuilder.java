@@ -78,12 +78,23 @@ public class ASMBuilder implements IRVisitor{
             }
             output.functions.add((ASMFunction) tmp.ASMOperand);
         });
-        node.functionList.forEach(func->func.accept(this));
+        IRFunction gPtr = null;
         node.globalInitList.forEach(func->func.accept(this));
+        if(node.globalInitList.size() != 0){
+            for(IRFunction func : node.globalInitList){
+                if(func.name.equals("_GLOBAL_")) gPtr = func;
+            }
+            assert gPtr != null;
+            for(IRFunction func : node.functionList) {
+                if (func.name.equals("main"))
+                    func.entryBlock().instructions.addFirst(new Call(gPtr, null));
+            }
+        }
+        node.functionList.forEach(func->func.accept(this));
     }
 
     @Override
-    public void visit(Call node) { //todo : decrease sp & change fp & increase sp & add ret
+    public void visit(Call node) {
         ASMFunction func = ((ASMFunction)node.operands.get(0).ASMOperand);
         node.operands.forEach(this::recurDown);
 
@@ -100,7 +111,7 @@ public class ASMBuilder implements IRVisitor{
                 assert node.getOperand(i+1).ASMOperand instanceof Register;
                 tmpArg = (Register) node.getOperand(i+1).ASMOperand;
             }
-            new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset,2, curFunction.virtualIndex++));
+            new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset.reverse(),2, curFunction.virtualIndex++));
         }
         // save ra
         Register backReg = new VirtualRegister(curFunction.virtualIndex++);

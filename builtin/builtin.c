@@ -80,13 +80,15 @@ int _class_string_length(char * str){
 char * _class_string_substring(char * str,int l,int r){
     int size = r-l+1; // for \0
     char * newPtr = (char *) malloc(size);
-    strncat(newPtr,str+l,size-1);
+    memcpy(newPtr,str+l,r-l);
     newPtr[size-1] = '\0';
     return newPtr;
 }
 
 int _class_string_parseInt(char * str){
-    return atoi(str);
+    int val;
+    sscanf(str,"%d",&val);
+    return val;
 }
 
 int _class_string_ord(char * str,int pos){

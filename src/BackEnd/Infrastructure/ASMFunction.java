@@ -36,9 +36,8 @@ public class ASMFunction extends Operand{
     }
 
     public Immediate allocStack(){
-        Immediate tmp = new Immediate(this.stackBias);
         this.stackBias += 4;
-        return tmp;
+        return new Immediate(this.stackBias);
     }
 
     public String printASM(){

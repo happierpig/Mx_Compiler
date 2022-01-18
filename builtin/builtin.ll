@@ -226,32 +226,35 @@ define i8* @_class_string_substring(i8* %0, i32 %1, i32 %2) #0 {
   %18 = load i32, i32* %5, align 4
   %19 = sext i32 %18 to i64
   %20 = getelementptr inbounds i8, i8* %17, i64 %19
-  %21 = load i32, i32* %7, align 4
-  %22 = sub nsw i32 %21, 1
-  %23 = sext i32 %22 to i64
-  %24 = load i8*, i8** %8, align 8
-  %25 = call i64 @llvm.objectsize.i64.p0i8(i8* %24, i1 false, i1 true, i1 false)
-  %26 = call i8* @__strncat_chk(i8* %16, i8* %20, i64 %23, i64 %25) #6
-  %27 = load i8*, i8** %8, align 8
-  %28 = load i32, i32* %7, align 4
-  %29 = sub nsw i32 %28, 1
-  %30 = sext i32 %29 to i64
-  %31 = getelementptr inbounds i8, i8* %27, i64 %30
-  store i8 0, i8* %31, align 1
-  %32 = load i8*, i8** %8, align 8
-  ret i8* %32
+  %21 = load i32, i32* %6, align 4
+  %22 = load i32, i32* %5, align 4
+  %23 = sub nsw i32 %21, %22
+  %24 = sext i32 %23 to i64
+  %25 = load i8*, i8** %8, align 8
+  %26 = call i64 @llvm.objectsize.i64.p0i8(i8* %25, i1 false, i1 true, i1 false)
+  %27 = call i8* @__memcpy_chk(i8* %16, i8* %20, i64 %24, i64 %26) #6
+  %28 = load i8*, i8** %8, align 8
+  %29 = load i32, i32* %7, align 4
+  %30 = sub nsw i32 %29, 1
+  %31 = sext i32 %30 to i64
+  %32 = getelementptr inbounds i8, i8* %28, i64 %31
+  store i8 0, i8* %32, align 1
+  %33 = load i8*, i8** %8, align 8
+  ret i8* %33
 }
 ; Function Attrs: nounwind
-declare i8* @__strncat_chk(i8*, i8*, i64, i64) #4
+declare i8* @__memcpy_chk(i8*, i8*, i64, i64) #4
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @_class_string_parseInt(i8* %0) #0 {
   %2 = alloca i8*, align 8
+  %3 = alloca i32, align 4
   store i8* %0, i8** %2, align 8
-  %3 = load i8*, i8** %2, align 8
-  %4 = call i32 @atoi(i8* %3)
-  ret i32 %4
+  %4 = load i8*, i8** %2, align 8
+  %5 = call i32 (i8*, i8*, ...) @sscanf(i8* %4, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.1, i64 0, i64 0), i32* %3)
+  %6 = load i32, i32* %3, align 4
+  ret i32 %6
 }
-declare i32 @atoi(i8*) #1
+declare i32 @sscanf(i8*, i8*, ...) #1
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @_class_string_ord(i8* %0, i32 %1) #0 {
   %3 = alloca i8*, align 8

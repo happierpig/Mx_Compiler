@@ -65,7 +65,7 @@ public class Main {
             // ASM
             ASMBuilder asmB = new ASMBuilder();
             asmB.visit(module);
-            System.out.println(asmB.output.printASM());
+//            System.out.println(asmB.output.printASM());
             EasyStack regAlloc = new EasyStack(asmB.output);
             regAlloc.process();
             System.out.println(regAlloc.ripe.printASM());
