@@ -207,6 +207,15 @@ public class ASMBuilder implements IRVisitor{
                 new ArthInstr(op,curBlock).addOperand(newOperand,rs2,rs1);
                 new ArthInstr("xor",curBlock).addOperand(newOperand,newOperand,new Immediate(1)); // not SSA
             }
+            case eq -> {
+                new ArthInstr("xor",curBlock).addOperand(newOperand,rs1,rs2);
+                new PseudoInstr("seqz",curBlock).addOperand(newOperand,newOperand);
+            }
+            case ne -> {
+                new ArthInstr("xor",curBlock).addOperand(newOperand,rs1,rs2);
+                new PseudoInstr("snez",curBlock).addOperand(newOperand,newOperand);
+            }
+            default -> throw new RuntimeException("I am stupid!");
         }
         node.ASMOperand = newOperand;
     }
