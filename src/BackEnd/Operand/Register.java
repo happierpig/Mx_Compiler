@@ -8,7 +8,7 @@ public abstract class Register extends Operand{
     public Register(String _name) {
         super(_name);
         this.inMem = false;
-        this.offset = null;
+        this.offset = new Immediate(0);
         this.color = 32;
     }
 

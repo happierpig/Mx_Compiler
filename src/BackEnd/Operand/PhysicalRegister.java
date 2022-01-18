@@ -35,6 +35,12 @@ public class PhysicalRegister extends Register{
         this.offset = new Immediate(other.offset.value);
     }
 
+    public PhysicalRegister(int _color,VirtualRegister other){
+        super(phyRegName.get(_color));
+        this.color = _color;
+        this.offset = new Immediate(other.offset.value);
+    }
+
     public PhysicalRegister(String _name,Immediate _offset){
         super(_name);
         this.offset = _offset;

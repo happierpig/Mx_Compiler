@@ -2,6 +2,7 @@ import AST.ASTBuilder;
 import AST.RootNode;
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Infrastructure.ASMBuilder;
+import BackEnd.RegAllocation.EasyStack;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
@@ -59,12 +60,15 @@ public class Main {
             IRBuilder irb = new IRBuilder(module,gScope);
             irb.visit(rt);
             irb.processGlobalInit();
-            System.out.println(module);
+//            System.out.println(module);
 
             // ASM
             ASMBuilder asmB = new ASMBuilder();
             asmB.visit(module);
             System.out.println(asmB.output.printASM());
+            EasyStack regAlloc = new EasyStack(asmB.output);
+            regAlloc.process();
+            System.out.println(regAlloc.ripe.printASM());
 
         } catch (RuntimeException er) {
             System.err.println(er.getMessage());
