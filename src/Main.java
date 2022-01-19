@@ -23,12 +23,12 @@ public class Main {
     public static void main(String[] args) throws Exception{
         String Sem = "-fsyntax-only",IR = "-emit-llvm", ASM = "-S", Output = "-o";
 
-        String name = "try.mx";
-        InputStream input = new FileInputStream(name);
-//        InputStream input = System.in;
+//        String name = "try.mx";
+//        InputStream input = new FileInputStream(name);
+        InputStream input = System.in;
         PrintStream os = System.out;
 
-        boolean SemanticFlag = false,LLVMFlag = false,ASMFlag = true;
+        boolean SemanticFlag = false,LLVMFlag = false,ASMFlag = false;
         for(int i = 0; i < args.length;++i){
             if(args[i].charAt(0) == '-'){
                 if(Objects.equals(args[i],Sem)) SemanticFlag = true;
