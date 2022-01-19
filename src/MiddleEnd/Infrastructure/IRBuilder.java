@@ -757,7 +757,7 @@ public class IRBuilder implements ASTVisitor {
         initList.getFirst().accept(this);
         Value elementNumber = initList.getFirst().IRoperand;
         initList.removeFirst();
-        // calculate total byte size (including array size)
+        // calculate total byte size (including array size) todo : fold constant
         Value elementByteSize = new Binary(Operator.mul,elementNumber,new IntConstant(elementType.byteSize()),curBlock);
         Value totalByteSize = new Binary(Operator.add,elementByteSize,new IntConstant(4),curBlock);
         // malloc
