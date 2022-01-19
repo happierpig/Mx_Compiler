@@ -246,7 +246,7 @@ public class IRBuilder implements ASTVisitor {
         curFunction = curClass == null ? funcTable.get(node.identifier) : funcTable.get("_"+curClass.name+"_"+node.identifier);
         FunctionType funcType = (FunctionType) curFunction.type;
         cScope = new IRScope(cScope, IRScope.scopeType.Func);
-        Value.refresh();
+//        Value.refresh();
         IRBasicBlock tmpEntry = new IRBasicBlock(curFunction.name,curFunction); // entry-Block
         IRBasicBlock tmpExit = new IRBasicBlock(curFunction.name,curFunction); // exit-Block
         Value tmpReturnValue;
