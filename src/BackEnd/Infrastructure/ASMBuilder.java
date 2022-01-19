@@ -379,6 +379,11 @@ public class ASMBuilder implements IRVisitor{
     }
 
     private void arthForm(Register dest, Operand unknown, Operand imm, String op){
+        if(unknown instanceof Immediate){
+            Register immReg = new VirtualRegister(curFunction.virtualIndex++);
+            new LiInstr(curBlock).addOperand(immReg,unknown);
+            unknown = immReg;
+        }
         if(imm instanceof Immediate){
             if(checkImmInstr(op,((Immediate)imm).value)){
                 new ArthInstr(op,curBlock).addOperand(dest,unknown,imm);
@@ -387,13 +392,6 @@ public class ASMBuilder implements IRVisitor{
                 new LiInstr(curBlock).addOperand(immReg,imm);
                 new ArthInstr(op,curBlock).addOperand(dest,unknown,immReg);
             }
-        }else{
-            if(unknown instanceof Immediate){
-                assert imm instanceof VirtualRegister;
-                Register immReg = new VirtualRegister(curFunction.virtualIndex++);
-                new LiInstr(curBlock).addOperand(immReg,unknown);
-                new ArthInstr(op,curBlock).addOperand(dest,immReg,imm);
-            }else new ArthInstr(op,curBlock).addOperand(dest,unknown,imm);
-        }
+        }else new ArthInstr(op,curBlock).addOperand(dest,unknown,imm);
     }
 }
