@@ -13,7 +13,7 @@ public class EasyStack{
     public ASMModule ripe;
     public HashMap<String, Integer> subsTable;
     // t0 : 5 ; t1: 6 ; t2 : 7; t3 : 28;
-
+    // todo: remake
     public EasyStack(ASMModule raw){
         ripe = raw;
         subsTable = new HashMap<>();
