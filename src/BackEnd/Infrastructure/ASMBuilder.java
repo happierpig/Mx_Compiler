@@ -34,10 +34,16 @@ public class ASMBuilder implements IRVisitor{
         if(node.isBuiltin) return;
         curFunction = (ASMFunction) node.ASMOperand;
         curBlock = curFunction.entryBlock();
-        // todo : callee saved
+        PhysicalRegister.calleeSaved.forEach(index->{
+            VirtualRegister tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
+            curFunction.calleeSaved.add(tmpBackup);
+            new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(index, curFunction.virtualIndex++));
+        });
         node.blockList.forEach(tmp->tmp.accept(this));
-        // todo : callee recover
         curBlock = curFunction.exitBlock();
+        for(int i = 0;i < curFunction.calleeSaved.size();++i){
+            new MoveInstr(curBlock).addOperand(new VirtualRegister(PhysicalRegister.calleeSaved.get(i),curFunction.virtualIndex++),curFunction.calleeSaved.get(i));
+        }
     }
 
     @Override

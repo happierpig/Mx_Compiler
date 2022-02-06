@@ -24,6 +24,14 @@ public class GraphColor {
         this.ripe = raw;
         physical_register = new HashSet<>(PhysicalRegister.phyRegName);
         // todo:
+        raw.functions.forEach(func->{
+            if(func.isBuiltin) return;
+            this.liveAnalysis(func);
+            StringBuilder rawString = new StringBuilder();
+            rawString.append(func.getName()).append(":\n");
+            conflict_check.forEach(tmp->rawString.append('\t').append(tmp.a).append(" <-> ").append(tmp.b).append('\n'));
+            System.out.println(rawString.toString());
+        });
     }
 
     /*

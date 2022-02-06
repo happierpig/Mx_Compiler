@@ -3,6 +3,7 @@ package BackEnd.Infrastructure;
 import BackEnd.Operand.Immediate;
 import BackEnd.Operand.Operand;
 import BackEnd.Operand.Register;
+import BackEnd.Operand.VirtualRegister;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 public class ASMFunction extends Operand{
     public ArrayList<ASMBlock> blockList;
     public ArrayList<Register> arguments;
+    public ArrayList<VirtualRegister> calleeSaved;
     public int stackBias;
     public int virtualIndex;
     public boolean isBuiltin;
@@ -18,6 +20,7 @@ public class ASMFunction extends Operand{
         super(_name);
         blockList = new ArrayList<>();
         arguments = new ArrayList<>();
+        calleeSaved = new ArrayList<>();
         stackBias = 0;
         virtualIndex = 0;
     }
