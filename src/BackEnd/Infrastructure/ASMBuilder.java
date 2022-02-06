@@ -34,12 +34,10 @@ public class ASMBuilder implements IRVisitor{
         if(node.isBuiltin) return;
         curFunction = (ASMFunction) node.ASMOperand;
         curBlock = curFunction.entryBlock();
-        Register tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
-        new MoveInstr(curBlock).addOperand(new VirtualRegister(9,curFunction.virtualIndex++),new VirtualRegister(8,curFunction.virtualIndex++));
-        new MoveInstr(curBlock).addOperand(tmpBackup,new VirtualRegister(9,curFunction.virtualIndex++));
+        // todo : callee saved
         node.blockList.forEach(tmp->tmp.accept(this));
+        // todo : callee recover
         curBlock = curFunction.exitBlock();
-        new MoveInstr(curBlock).addOperand(new VirtualRegister(8,curFunction.virtualIndex++),tmpBackup);
     }
 
     @Override
@@ -239,8 +237,10 @@ public class ASMBuilder implements IRVisitor{
     public void visit(Branch node) {
         node.ASMOperand = null;
         node.operands.forEach(this::recurDown);
-        if(node.operands.size() == 1) new JumpInstr(curBlock).addOperand(node.getOperand(0).ASMOperand);
-        else{
+        if(node.operands.size() == 1){
+            new JumpInstr(curBlock).addOperand(node.getOperand(0).ASMOperand);
+            curBlock.successors.add((ASMBlock) node.getOperand(0).ASMOperand);
+        }else{
             // br flag block1 block2 -> bne flag zero block1 + j block2
             Operand flag = node.getOperand(0).ASMOperand;
             if(flag instanceof Immediate){
@@ -249,6 +249,8 @@ public class ASMBuilder implements IRVisitor{
             }
             new BranchInstr(curBlock,"bne").addOperand(node.getOperand(1).ASMOperand,flag,PhysicalRegister.getPhyReg(0));
             new JumpInstr(curBlock).addOperand(node.getOperand(2).ASMOperand);
+            curBlock.successors.add((ASMBlock) node.getOperand(1).ASMOperand);
+            curBlock.successors.add((ASMBlock) node.getOperand(2).ASMOperand);
         }
     }
 

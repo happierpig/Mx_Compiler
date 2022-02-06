@@ -15,6 +15,8 @@ public class StoreInstr extends Instruction{
     public Instruction addOperand(Operand... args) {
         assert args.length == 2;
         rd = null; rs1 = args[1]; rs2 = args[0];
+        this.use.add(rs1.getName());
+        this.use.add(rs2.getName());
         return this;
     }
 

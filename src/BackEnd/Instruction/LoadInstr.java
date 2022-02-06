@@ -19,6 +19,8 @@ public class LoadInstr extends Instruction{
     public Instruction addOperand(Operand... args) {
         assert args.length == 2;
         rd = args[0]; rs1 = args[1]; rs2 = null;
+        this.def.add(rd.getName());
+        this.use.add(rs1.getName());
         return this;
     }
 

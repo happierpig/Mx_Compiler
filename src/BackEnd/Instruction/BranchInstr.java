@@ -2,6 +2,7 @@ package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Operand.Operand;
+import BackEnd.Operand.Register;
 
 public class BranchInstr extends Instruction{
     // 0 destBlock ; 1 rs1 ; 2 rs2
@@ -13,6 +14,8 @@ public class BranchInstr extends Instruction{
     public Instruction addOperand(Operand... args) {
         assert args.length == 3;
         rd = args[0]; rs1 = args[1]; rs2 = args[2];
+        this.use.add(rs1.getName());
+        this.use.add(rs2.getName());
         return this;
     }
 
