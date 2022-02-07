@@ -472,7 +472,7 @@ public class GraphColor {
         for(ASMBlock bb : func.blockList){
             LinkedList<Instruction> writtenInst = new LinkedList<>();
             for(Instruction inst : bb.instructionList){
-                inst.use.forEach(regName->{
+                for(String regName : inst.use){
                     if(spilled_nodes.contains(regName)){ // insert load
                         int offset = subTable.get(regName);
                         assert offset >= 0;
@@ -489,9 +489,9 @@ public class GraphColor {
                         }
                         inst.rewriteUse(regName,tmpReg);
                     }
-                });
+                }
                 writtenInst.add(inst);
-                inst.def.forEach(regName->{
+                for(String regName : inst.def){
                     if(spilled_nodes.contains(regName)){ // insert load
                         int offset = subTable.get(regName);
                         assert offset >= 0;
@@ -508,7 +508,7 @@ public class GraphColor {
                         }
                         inst.rewriteDef(regName,tmpReg);
                     }
-                });
+                }
             }
             bb.instructionList = writtenInst;
         }
