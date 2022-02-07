@@ -34,6 +34,9 @@ public class ASMBuilder implements IRVisitor{
         if(node.isBuiltin) return;
         curFunction = (ASMFunction) node.ASMOperand;
         curBlock = curFunction.entryBlock();
+        // save ra
+        VirtualRegister tmpRa = new VirtualRegister(curFunction.virtualIndex++);
+        new MoveInstr(curBlock).addOperand(tmpRa,new VirtualRegister(1, curFunction.virtualIndex++));
         PhysicalRegister.calleeSaved.forEach(index->{
             VirtualRegister tmpBackup = new VirtualRegister(curFunction.virtualIndex++);
             curFunction.calleeSaved.add(tmpBackup);
@@ -44,6 +47,8 @@ public class ASMBuilder implements IRVisitor{
         for(int i = 0;i < curFunction.calleeSaved.size();++i){
             new MoveInstr(curBlock).addOperand(new VirtualRegister(PhysicalRegister.calleeSaved.get(i),curFunction.virtualIndex++),curFunction.calleeSaved.get(i));
         }
+        // recover ra
+        new MoveInstr(curBlock).addOperand(new VirtualRegister(1, curFunction.virtualIndex++),tmpRa);
     }
 
     @Override
@@ -118,14 +123,7 @@ public class ASMBuilder implements IRVisitor{
             }
             new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset.reverse(),2, curFunction.virtualIndex++));
         }
-        // save ra
-        Register backReg = new VirtualRegister(curFunction.virtualIndex++);
-        new MoveInstr(curBlock).addOperand(backReg,new VirtualRegister(1,curFunction.virtualIndex++));
-
         new CallInstr(curBlock).addOperand(func);
-
-        new MoveInstr(curBlock).addOperand(new VirtualRegister(1,curFunction.virtualIndex++),backReg);
-
         if(!(node.type instanceof VoidType)){
             Register returnValue = new VirtualRegister(curFunction.virtualIndex++);
             new MoveInstr(curBlock).addOperand(returnValue,new VirtualRegister(10,curFunction.virtualIndex++));
@@ -330,7 +328,7 @@ public class ASMBuilder implements IRVisitor{
             assert returnValue instanceof Register;
             new MoveInstr(curBlock).addOperand(new VirtualRegister(10,curFunction.virtualIndex++),returnValue); // x10 = a0
         }
-        // ret instruction added to the last
+        // ret instruction added in Register Allocation.
     }
 
     @Override
