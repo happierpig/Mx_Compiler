@@ -3,6 +3,7 @@ import AST.RootNode;
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Infrastructure.ASMBuilder;
 import BackEnd.RegAllocation.EasyStack;
+import BackEnd.RegAllocation.GraphColor;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
@@ -23,12 +24,12 @@ public class Main {
     public static void main(String[] args) throws Exception{
         String Sem = "-fsyntax-only",IR = "-emit-llvm", ASM = "-S", Output = "-o";
 
-        String name = "try.mx";
-        InputStream input = new FileInputStream(name);
-//        InputStream input = System.in;
+//        String name = "try.mx";
+//        InputStream input = new FileInputStream(name);
+        InputStream input = System.in;
         PrintStream os = System.out;
 
-        boolean SemanticFlag = false,LLVMFlag = false,ASMFlag = true;
+        boolean SemanticFlag = false,LLVMFlag = false,ASMFlag = false;
         for(int i = 0; i < args.length;++i){
             if(args[i].charAt(0) == '-'){
                 if(Objects.equals(args[i],Sem)) SemanticFlag = true;
@@ -80,8 +81,10 @@ public class Main {
                 ASMBuilder asmB = new ASMBuilder();
                 asmB.visit(module);
 //                os.println(asmB.output.printASM());
-                EasyStack regAlloc = new EasyStack(asmB.output);
-                regAlloc.process();
+//                EasyStack regAlloc = new EasyStack(asmB.output);
+//                regAlloc.process();
+//                if(ASMFlag) os.println(regAlloc.ripe.printASM());
+                GraphColor regAlloc = new GraphColor(asmB.output);
                 if(ASMFlag) os.println(regAlloc.ripe.printASM());
             }
 
