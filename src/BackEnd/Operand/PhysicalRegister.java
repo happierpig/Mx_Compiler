@@ -2,6 +2,7 @@ package BackEnd.Operand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class PhysicalRegister extends Register{
 
@@ -19,6 +20,8 @@ public class PhysicalRegister extends Register{
             8,9,
             18,19,20,21,22,23,24,25,26,27
     ));
+
+    public static final HashSet<Integer> callerSaved_check = new HashSet<>(callerSaved);
 
     public PhysicalRegister(String _name) {
         super(_name);
