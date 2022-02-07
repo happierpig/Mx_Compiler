@@ -121,7 +121,7 @@ public class ASMBuilder implements IRVisitor{
                 assert node.getOperand(i+1).ASMOperand instanceof Register;
                 tmpArg = (Register) node.getOperand(i+1).ASMOperand;
             }
-            new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset.reverse(),2, curFunction.virtualIndex++));
+            new StoreInstr(curBlock,"sw").addOperand(tmpArg,new VirtualRegister(func.arguments.get(i).offset,2, curFunction.virtualIndex++));
         }
         new CallInstr(curBlock).addOperand(func);
         if(!(node.type instanceof VoidType)){
