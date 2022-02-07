@@ -44,10 +44,15 @@ public class GraphColor {
     public GraphColor(ASMModule raw){
         this.ripe = raw;
         physical_register = new HashSet<>(PhysicalRegister.phyRegName);
+        int count = 0;
+//        System.out.println(this.ripe.printASM());
+//        System.out.println("\t\t\t--------Start------");
         for(ASMFunction func : raw.functions){
             if(func.isBuiltin) continue;
+            ++count;
             process(func);
             regAllocate(func);
+//            System.out.print("\t\t\t-----After"); System.out.println(count);System.out.println(this.ripe.printASM());
         }
     }
 
