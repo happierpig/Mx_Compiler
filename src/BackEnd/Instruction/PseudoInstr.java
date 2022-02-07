@@ -2,11 +2,30 @@ package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Operand.Operand;
+import BackEnd.Operand.VirtualRegister;
 
 public class PseudoInstr extends Instruction{
     // 0 rd ; 1 rs1
     public PseudoInstr(String _op, ASMBlock _curBlock) {
         super(_curBlock,_op);
+    }
+
+    @Override
+    public void rewriteUse(String origin, VirtualRegister born) {
+        if(rs1.getName().equals(origin)){
+            rs1 = born;
+            use.remove(origin);
+            use.add(born.getName());
+        }
+    }
+
+    @Override
+    public void rewriteDef(String origin, VirtualRegister born) {
+        if(rd.getName().equals(origin)){
+            rd = born;
+            def.remove(origin);
+            def.add(born.getName());
+        }
     }
 
     @Override

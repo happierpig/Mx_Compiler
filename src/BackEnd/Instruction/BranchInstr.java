@@ -3,11 +3,31 @@ package BackEnd.Instruction;
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Operand.Operand;
 import BackEnd.Operand.Register;
+import BackEnd.Operand.VirtualRegister;
 
 public class BranchInstr extends Instruction{
     // 0 destBlock ; 1 rs1 ; 2 rs2
     public BranchInstr(ASMBlock _curBlock, String _op) {
         super(_curBlock, _op);
+    }
+
+    @Override
+    public void rewriteUse(String origin, VirtualRegister born) {
+        if(rs1.getName().equals(origin)){
+            rs1 = born;
+            use.remove(origin);
+            use.add(born.getName());
+        }
+        if(rs2.getName().equals(origin)){
+            rs2 = born;
+            use.remove(origin);
+            use.add(born.getName());
+        }
+    }
+
+    @Override
+    public void rewriteDef(String origin, VirtualRegister born) {
+        throw new RuntimeException("[Debug] Why call rewrite Def");
     }
 
     @Override

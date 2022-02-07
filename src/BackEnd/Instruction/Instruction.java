@@ -2,7 +2,7 @@ package BackEnd.Instruction;
 
 import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Operand.Operand;
-import BackEnd.Operand.Register;
+import BackEnd.Operand.VirtualRegister;
 
 import java.util.ArrayList;
 
@@ -19,6 +19,10 @@ public abstract class Instruction{
         this.def = new ArrayList<>();
         this.use = new ArrayList<>();
     }
+
+    public abstract void rewriteUse(String origin, VirtualRegister born);
+
+    public abstract void rewriteDef(String origin, VirtualRegister born);
 
     public abstract Instruction addOperand(Operand ... args);
 
