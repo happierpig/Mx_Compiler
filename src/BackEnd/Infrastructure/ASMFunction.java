@@ -21,7 +21,7 @@ public class ASMFunction extends Operand{
         blockList = new ArrayList<>();
         arguments = new ArrayList<>();
         calleeSaved = new ArrayList<>();
-        stackBias = 0;
+        stackBias = 4; // first four bytes are for s0
         virtualIndex = 0;
     }
 
