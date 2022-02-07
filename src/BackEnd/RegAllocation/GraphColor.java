@@ -85,11 +85,15 @@ public class GraphColor {
         LinkedList<Instruction> exitList = func.exitBlock().instructionList;
         int offset = func.stackBias;
         if(offset < 2048){
+            entryList.addFirst(new ArthInstr("add",null).addOperand(
+                    new PhysicalRegister("s0"),new PhysicalRegister("sp"),new Immediate(offset)));
             entryList.addFirst(new ArthInstr("add",null)
                     .addOperand(new PhysicalRegister("sp"),new PhysicalRegister("sp"),new Immediate(-offset)));
             exitList.addLast(new ArthInstr("add",null)
                     .addOperand(new PhysicalRegister("sp"),new PhysicalRegister("sp"),new Immediate(offset)));
         }else{
+            entryList.addFirst(new ArthInstr("sub",null).addOperand(
+                    new PhysicalRegister("s0"),new PhysicalRegister("sp"),new PhysicalRegister("t0")));
             entryList.addFirst(new ArthInstr("add",null)
                     .addOperand(new PhysicalRegister("sp"),new PhysicalRegister("sp"),new PhysicalRegister("t0")));
             entryList.addFirst(new LiInstr(null).addOperand(new PhysicalRegister("t0"),new Immediate(-offset)));
@@ -97,6 +101,11 @@ public class GraphColor {
             exitList.addLast(new ArthInstr("add",null)
                     .addOperand(new PhysicalRegister("sp"),new PhysicalRegister("sp"),new PhysicalRegister("t0")));
         }
+        // Maintain s0
+        entryList.addFirst(new StoreInstr(null,"sw").addOperand(
+                new PhysicalRegister("s0"),new PhysicalRegister("sp",new Immediate(-4))));
+        exitList.addLast(new LoadInstr(null,"lw").addOperand(
+                new PhysicalRegister("s0"),new PhysicalRegister("sp",new Immediate(-4))));
         exitList.addLast(new RetInstr(null));
     }
 
@@ -315,8 +324,7 @@ public class GraphColor {
     }
 
     private String getAlias(String node){
-        String father = alias.get(node);
-        return coalesced_nodes.contains(father) ? getAlias(father) : father;
+        return coalesced_nodes.contains(node) ? getAlias(alias.get(node)) : node;
     }
 
     private boolean OK(String t, String r){
