@@ -7,6 +7,7 @@ import MiddleEnd.IRModule;
 import MiddleEnd.Instruction.Alloc;
 import MiddleEnd.Instruction.IRInstruction;
 import MiddleEnd.Instruction.Load;
+import MiddleEnd.Instruction.Store;
 import MiddleEnd.Operand.Temporary;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,7 +44,9 @@ public class Mem2Reg{
                     Value address = inst.getOperand(0);
                     if(address instanceof Alloc){
                         assert alloc_table.containsKey((Alloc)address);
-                        load_map.put((Load)inst, alloc_table.get((Alloc)address));
+                        Temporary newTemp = new Temporary(address.type.dePointed());
+                        load_map.put((Load)inst, newTemp);
+                        rewriteList.add(new Store(alloc_table.get((Alloc) address),newTemp,null));
                         continue;
                     }
                 }
