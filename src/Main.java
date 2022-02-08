@@ -1,14 +1,13 @@
 import AST.ASTBuilder;
 import AST.RootNode;
-import BackEnd.Infrastructure.ASMBlock;
 import BackEnd.Infrastructure.ASMBuilder;
-import BackEnd.RegAllocation.EasyStack;
 import BackEnd.RegAllocation.GraphColor;
 import FrontEnd.BuiltInInitiator;
 import FrontEnd.PreProcessor;
 import FrontEnd.SemanticChecker;
 import MiddleEnd.IRModule;
 import MiddleEnd.Infrastructure.IRBuilder;
+import Optimization.Mem2Reg;
 import Utils.GlobalScope;
 import Utils.MxErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -16,7 +15,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import Parser.MxParser;
 import Parser.MxLexer;
-import java.io.FileInputStream;
 import java.io.*;
 import java.util.Objects;
 
@@ -76,6 +74,7 @@ public class Main {
                 irb.visit(rt);
                 irb.processGlobalInit();
                 if(LLVMFlag) os.println(module);
+                Mem2Reg opt1 = new Mem2Reg(module);
 
                 // ASM
                 ASMBuilder asmB = new ASMBuilder();

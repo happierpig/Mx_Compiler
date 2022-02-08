@@ -9,10 +9,7 @@ import MiddleEnd.IRFunction;
 import MiddleEnd.IRModule;
 import MiddleEnd.Infrastructure.IRVisitor;
 import MiddleEnd.Instruction.*;
-import MiddleEnd.Operand.BoolConstant;
-import MiddleEnd.Operand.IntConstant;
-import MiddleEnd.Operand.NullConstant;
-import MiddleEnd.Operand.StringConstant;
+import MiddleEnd.Operand.*;
 import MiddleEnd.TypeSystem.*;
 
 
@@ -129,6 +126,11 @@ public class ASMBuilder implements IRVisitor{
             new MoveInstr(curBlock).addOperand(returnValue,new VirtualRegister(10,curFunction.virtualIndex++));
             node.ASMOperand = returnValue;
         }
+    }
+
+    @Override
+    public void visit(Temporary node) {
+        node.ASMOperand = new VirtualRegister(curFunction.virtualIndex++);
     }
 
     @Override
@@ -350,13 +352,18 @@ public class ASMBuilder implements IRVisitor{
                 value = tmpLoad;
             }
         }
-        if(pointerOp instanceof Register) new StoreInstr(curBlock,"sw").addOperand(value,pointerOp);
-        else {
-            assert pointerOp instanceof GlobalVar;
-            Register addressReg = new VirtualRegister(curFunction.virtualIndex++);
-            new LaInstr(curBlock).addOperand(addressReg,pointerOp);
-            addressReg.offset = new Immediate(0);
-            new StoreInstr(curBlock,"sw").addOperand(value,addressReg);
+        if(node.getOperand(1) instanceof Temporary){
+            assert pointerOp instanceof VirtualRegister;
+            new MoveInstr(curBlock).addOperand(pointerOp,value);
+        }else {
+            if (pointerOp instanceof Register) new StoreInstr(curBlock, "sw").addOperand(value, pointerOp);
+            else {
+                assert pointerOp instanceof GlobalVar;
+                Register addressReg = new VirtualRegister(curFunction.virtualIndex++);
+                new LaInstr(curBlock).addOperand(addressReg, pointerOp);
+                addressReg.offset = new Immediate(0);
+                new StoreInstr(curBlock, "sw").addOperand(value, addressReg);
+            }
         }
     }
 

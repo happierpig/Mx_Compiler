@@ -45,4 +45,6 @@ public interface IRVisitor {
     void visit(Trunc node);
 
     void visit(Zext node);
+
+    void visit(Temporary node);
 }
