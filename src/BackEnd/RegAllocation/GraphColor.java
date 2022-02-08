@@ -477,7 +477,8 @@ public class GraphColor {
         for(ASMBlock bb : func.blockList){
             LinkedList<Instruction> writtenInst = new LinkedList<>();
             for(Instruction inst : bb.instructionList){
-                for(String regName : inst.use){
+                for(int i = 0;i < inst.use.size();++i){
+                    String regName = inst.use.get(i);
                     if(spilled_nodes.contains(regName)){ // insert load
                         int offset = subTable.get(regName);
                         assert offset >= 0;
