@@ -250,8 +250,9 @@ public class ASMBuilder implements IRVisitor{
             // br flag block1 block2 -> bne flag zero block1 + j block2
             Operand flag = node.getOperand(0).ASMOperand;
             if(flag instanceof Immediate){
+                Immediate tmpImm = new Immediate(((Immediate) flag).value);
                 flag = new VirtualRegister(curFunction.virtualIndex++);
-                new LiInstr(curBlock).addOperand(flag,flag);
+                new LiInstr(curBlock).addOperand(flag,tmpImm);
             }
             new BranchInstr(curBlock,"bne").addOperand(node.getOperand(1).ASMOperand,flag,PhysicalRegister.getPhyReg(0));
             new JumpInstr(curBlock).addOperand(node.getOperand(2).ASMOperand);
