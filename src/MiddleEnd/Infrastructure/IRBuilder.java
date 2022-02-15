@@ -268,7 +268,7 @@ public class IRBuilder implements ASTVisitor {
         }
         if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(stmt-> stmt.accept(this));
         if(curBlock.terminator == null){
-            if(node.funcType != null && (!(node.funcType.toString().equals("void")))){
+            if(node.funcType != null && (!(funcType.toString().equals("void")))){
                 new Store(new IntConstant(0),curFunction.returnAddress,curBlock);
             }
             new Branch(curBlock, curFunction.exitBlock());
