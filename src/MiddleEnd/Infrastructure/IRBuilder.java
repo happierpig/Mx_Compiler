@@ -267,7 +267,12 @@ public class IRBuilder implements ASTVisitor {
             cScope.setVariable(funcType.parametersName.get(i),realArg);
         }
         if(node.funcBody.stmtList != null) node.funcBody.stmtList.forEach(stmt-> stmt.accept(this));
-        if(curBlock.terminator == null) new Branch(curBlock, curFunction.exitBlock());
+        if(curBlock.terminator == null){
+            if(node.funcType != null && (!(node.funcType.toString().equals("void")))){
+                new Store(new IntConstant(0),curFunction.returnAddress,curBlock);
+            }
+            new Branch(curBlock, curFunction.exitBlock());
+        }
         curBlock = null;
         cScope = cScope.upRoot();
     }
